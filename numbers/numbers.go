@@ -5,41 +5,27 @@ import (
 )
 
 func StairCaseProblemDPSolution(totalSteps int, steps []int) int {
-	maxStep := -1
-	for _, s := range steps {
-		if s > maxStep {
-			maxStep = s
-		}
-	}
-	dp := make([][]int, totalSteps+1)
-	for i := range dp {
-		dp[i] = make([]int, maxStep+1)
-	}
+	dp := make([]int, totalSteps+1)
 
-	var countWays func(totalSteps int, steps int) int
+	var countWays func(totalSteps int) int
 
-	countWays = func(totalSteps int, step int) int {
+	countWays = func(totalSteps int) int {
 		if totalSteps == 0 {
 			return 1
 		} else if totalSteps < 0 {
 			return 0
 		}
-		if dp[totalSteps][step] > 0 {
-			return dp[totalSteps][step]
+		if dp[totalSteps] > 0 {
+			return dp[totalSteps]
 		}
 
 		for _, s := range steps {
-			dp[totalSteps][step] += countWays(totalSteps-s, s)
+			dp[totalSteps] += countWays(totalSteps - s)
 		}
-		return dp[totalSteps][step]
+		return dp[totalSteps]
 	}
 
-	res := 0
-	for _, s := range steps {
-		res += countWays(totalSteps-s, s)
-	}
-
-	return res
+	return countWays(totalSteps)
 }
 
 func StairCaseProblemOrderDoestNotMatter(totalSteps int) int {
