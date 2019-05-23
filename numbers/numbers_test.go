@@ -4,6 +4,50 @@ import (
 	"testing"
 )
 
+func TestStairCaseProblemDPSolution(t *testing.T) {
+	data := []struct {
+		tsteps int
+		steps  []int
+		out    int
+	}{{2, []int{1, 2}, 2}, {4, []int{1, 2}, 5}}
+
+	for i, d := range data {
+		out := StairCaseProblemDPSolution(d.tsteps, d.steps)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}
+
+func TestStairCaseProblem(t *testing.T) {
+	data := []struct {
+		tsteps int
+		steps  []int
+		out    int
+	}{{2, []int{1, 2}, 2}, {4, []int{1, 2}, 5}}
+
+	for i, d := range data {
+		out := StairCaseProblem(d.tsteps, d.steps)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}
+
+func TestStairCaseProblemOrderDoesNotMatter(t *testing.T) {
+	data := []struct {
+		tsteps int
+		out    int
+	}{{2, 2}, {4, 3}, {5, 3}, {6, 4}}
+
+	for i, d := range data {
+		out := StairCaseProblemOrderDoestNotMatter(d.tsteps)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}
+
 func TestDelannoyNumber(t *testing.T) {
 	data := []struct {
 		n, m, out int

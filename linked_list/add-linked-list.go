@@ -5,9 +5,6 @@ import (
 	"strings"
 )
 
-var list1 = &Node{val: 5, next: &Node{val: 6, next: &Node{val: 3, next: nil}}}
-var list2 = &Node{val: 8, next: &Node{val: 4, next: &Node{val: 2, next: nil}}}
-
 type List struct {
 	head *Node
 	len  int

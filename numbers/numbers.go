@@ -4,6 +4,68 @@ import (
 	"strings"
 )
 
+func StairCaseProblemDPSolution(totalSteps int, steps []int) int {
+	maxStep := -1
+	for _, s := range steps {
+		if s > maxStep {
+			maxStep = s
+		}
+	}
+	dp := make([][]int, totalSteps+1)
+	for i := range dp {
+		dp[i] = make([]int, maxStep+1)
+	}
+
+	var countWays func(totalSteps int, steps int) int
+
+	countWays = func(totalSteps int, step int) int {
+		if totalSteps == 0 {
+			return 1
+		} else if totalSteps < 0 {
+			return 0
+		}
+		if dp[totalSteps][step] > 0 {
+			return dp[totalSteps][step]
+		}
+
+		for _, s := range steps {
+			dp[totalSteps][step] += countWays(totalSteps-s, s)
+		}
+		return dp[totalSteps][step]
+	}
+
+	res := 0
+	for _, s := range steps {
+		res += countWays(totalSteps-s, s)
+	}
+
+	return res
+}
+
+func StairCaseProblemOrderDoestNotMatter(totalSteps int) int {
+	// possible steps [1, 2]
+	if totalSteps%2 == 0 {
+		return 1 + totalSteps/2
+	} else {
+		return 1 + (totalSteps-1)/2
+	}
+
+}
+
+func StairCaseProblem(totalSteps int, steps []int) int {
+	if totalSteps == 0 {
+		return 1
+	} else if totalSteps < 0 {
+		return 0
+	}
+	res := 0
+	for _, s := range steps {
+		res += StairCaseProblem(totalSteps-s, steps)
+	}
+
+	return res
+}
+
 func DelannoyNumber(n, m int) int {
 	var D func(n, m int) int
 	D = func(n, m int) int {
