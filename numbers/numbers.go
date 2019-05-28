@@ -4,6 +4,30 @@ import (
 	"strings"
 )
 
+func FindDropsKMarbleBreaksInNFloorBuilding(n, k int) int {
+	var findMaxFloor func(d, k int) int
+	findMaxFloor = func(d, k int) int {
+		if d == 0 || k == 0 {
+			return 0
+		} else if d == 1 {
+			return 1
+		} else if k == 1 {
+			return d
+		}
+
+		return findMaxFloor(d-1, k-1) + findMaxFloor(d-1, k) + 1
+	}
+	d := k
+	for {
+		if findMaxFloor(d, k) >= n {
+			break
+		}
+		d++
+	}
+
+	return d
+}
+
 func StairCaseProblemDPSolution(totalSteps int, steps []int) int {
 	dp := make([]int, totalSteps+1)
 

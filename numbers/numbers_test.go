@@ -4,6 +4,21 @@ import (
 	"testing"
 )
 
+func TestFindDropsKMarbleBreaksInNFloorBuilding(t *testing.T) {
+	data := []struct {
+		N, K int
+		out  int
+	}{
+		{100, 1, 100}, {100, 2, 14}, {100, 3, 9}, {56, 4, 6},
+	}
+	for i, d := range data {
+		out := FindDropsKMarbleBreaksInNFloorBuilding(d.N, d.K)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}
+
 func TestStairCaseProblemDPSolution(t *testing.T) {
 	data := []struct {
 		tsteps int
