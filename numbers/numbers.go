@@ -4,6 +4,68 @@ import (
 	"strings"
 )
 
+func CountCarryInt(a, b int) int {
+	digitSum := func(n int) int {
+		sum := 0
+		for ; n > 0; n /= 10 {
+			sum += n % 10
+		}
+		return sum
+	}
+
+	return (digitSum(a) + digitSum(b) - digitSum(a+b)) / 9
+}
+
+func CountCarryIter(num1, num2 string) int {
+	if len(num1) > len(num2) {
+		num1, num2 = num2, num1
+	}
+	count := 0
+	carry := 0
+	for i := len(num1) - 1; i >= 0; i-- {
+		n1 := int(num1[i] - '0')
+		n2 := int(num2[i] - '0')
+		if n1+n2+carry >= 10 {
+			carry = 1
+			count++
+		} else {
+			carry = 0
+		}
+	}
+
+	if len(num2) > len(num1) {
+		n2 := int(num2[len(num2)-1-len(num1)] - '0')
+		if n2+carry >= 10 {
+			count++
+		}
+	}
+	return count
+}
+
+func CountCarry(num1, num2 string) int {
+	var countCarry func(id1, id2, carry int) int
+	countCarry = func(id1, id2, carry int) int {
+		if id1 < 0 && id2 < 0 {
+			return 0
+		}
+
+		n1, n2 := 0, 0
+		if id1 >= 0 {
+			n1 = int(num1[id1] - '0')
+		}
+		if id2 >= 0 {
+			n2 = int(num2[id2] - '0')
+		}
+		if n1+n2+carry >= 10 {
+			return 1 + countCarry(id1-1, id2-1, 1)
+		}
+
+		return countCarry(id1-1, id2-1, 0)
+	}
+
+	return countCarry(len(num1)-1, len(num2)-1, 0)
+}
+
 func FindDropsKMarbleBreaksInNFloorBuilding(n, k int) int {
 	var findMaxFloor func(d, k int) int
 	findMaxFloor = func(d, k int) int {

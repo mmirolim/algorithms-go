@@ -4,6 +4,55 @@ import (
 	"testing"
 )
 
+func TestCountCarryInt(t *testing.T) {
+	data := []struct {
+		a, b int
+		out  int
+	}{
+		{123, 456, 0}, {555, 555, 3}, {123, 594, 1},
+		{9823, 290, 3}, {99, 1, 2},
+	}
+	for i, d := range data {
+		out := CountCarryInt(d.a, d.b)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+
+}
+func TestCountCarry(t *testing.T) {
+	data := []struct {
+		a, b string
+		out  int
+	}{
+		{"123", "456", 0}, {"555", "555", 3}, {"123", "594", 1},
+		{"9823", "290", 3}, {"99", "1", 2},
+	}
+	for i, d := range data {
+		out := CountCarry(d.a, d.b)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+
+}
+func TestCountCarryIter(t *testing.T) {
+	data := []struct {
+		a, b string
+		out  int
+	}{
+		{"123", "456", 0}, {"555", "555", 3}, {"123", "594", 1},
+		{"9823", "290", 3}, {"99", "1", 2},
+	}
+	for i, d := range data {
+		out := CountCarryIter(d.a, d.b)
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+
+}
+
 func TestFindDropsKMarbleBreaksInNFloorBuilding(t *testing.T) {
 	data := []struct {
 		N, K int
