@@ -4,6 +4,30 @@ import (
 	"strings"
 )
 
+func LightMoreLight(n int) bool {
+	count := 0
+	for i := 1; i <= n; i++ {
+		if n%i == 0 {
+			count++
+		}
+	}
+
+	return count%2 != 0
+}
+
+func StanVsOllie(n int) bool {
+	x := 1
+	stanWins := false
+	for n > x {
+		x *= 9
+		if x >= n {
+			stanWins = true
+			break
+		}
+		x *= 2
+	}
+	return stanWins
+}
 func CountCarryInt(a, b int) int {
 	digitSum := func(n int) int {
 		sum := 0

@@ -4,6 +4,39 @@ import (
 	"testing"
 )
 
+func TestLightMoreLight(t *testing.T) {
+	data := []struct {
+		n      int
+		lastOn bool
+	}{
+		{3, false}, {6241, true}, {8191, false},
+	}
+	for i, d := range data {
+		out := LightMoreLight(d.n)
+		if out != d.lastOn {
+			t.Errorf("case [%v] expected %v, got %v", i, d.lastOn, out)
+		}
+	}
+
+}
+
+func TestStanVsOllie(t *testing.T) {
+	data := []struct {
+		n        int
+		stanWins bool
+	}{
+		{162, true}, {17, false}, {34012226, true},
+		{324, false},
+	}
+	for i, d := range data {
+		out := StanVsOllie(d.n)
+		if out != d.stanWins {
+			t.Errorf("case [%v] expected %v, got %v", i, d.stanWins, out)
+		}
+	}
+
+}
+
 func TestCountCarryInt(t *testing.T) {
 	data := []struct {
 		a, b int
