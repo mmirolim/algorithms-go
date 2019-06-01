@@ -212,3 +212,157 @@ func (t *Tree) ToString() string {
 	}
 	return str.String()
 }
+
+type Tree3_13 struct {
+	id          int
+	val         int
+	sum         int
+	left, right *Tree3_13
+}
+
+func (t *Tree3_13) ToString() string {
+	var out strings.Builder
+	f := func(t *Tree3_13) {
+		out.WriteString("(id=")
+		out.WriteString(strconv.Itoa(t.id))
+		out.WriteString(",val=")
+		out.WriteString(strconv.Itoa(t.val))
+		out.WriteString(",sum=")
+		out.WriteString(strconv.Itoa(t.sum))
+		out.WriteRune(')')
+	}
+	t.TraverseLevelOrder(f)
+	return out.String()
+}
+
+func (t *Tree3_13) TraverseInOrder(f func(t *Tree3_13)) {
+	if t.left != nil {
+		t.left.TraverseInOrder(f)
+	}
+	f(t)
+	if t.right != nil {
+		t.right.TraverseInOrder(f)
+	}
+}
+func (t *Tree3_13) TraverseLevelOrder(f func(t *Tree3_13)) {
+	q := []*Tree3_13{}
+	push := func(t *Tree3_13) {
+		q = append(q, t)
+	}
+	pop := func() *Tree3_13 {
+		tr := q[0]
+		q = q[1:]
+		return tr
+	}
+
+	push(t)
+	func(t *Tree3_13, f func(t *Tree3_13)) {
+		for len(q) > 0 {
+			node := pop()
+			f(node)
+			if node.left != nil {
+				push(node.left)
+			}
+			if node.right != nil {
+				push(node.right)
+			}
+		}
+	}(t, f)
+
+}
+
+type ADMProblem3_13_Solution struct {
+	// balanced binary tree
+	t *Tree3_13
+}
+
+func (s *ADMProblem3_13_Solution) Add(i, y int) {
+	var add func(t *Tree3_13, i, y int)
+	add = func(t *Tree3_13, i, y int) {
+		t.sum += y
+		if t.id == i {
+			t.val += y
+			return
+		}
+		if t.id > i {
+			add(t.left, i, y)
+			return
+		}
+		add(t.right, i, y)
+	}
+	add(s.t, i, y)
+}
+
+func (s *ADMProblem3_13_Solution) PartialSum(i int) int {
+	var partialSum func(t *Tree3_13, id, sum int) int
+
+	partialSum = func(t *Tree3_13, id, sum int) int {
+		leftSum := 0
+		if t.left != nil {
+			leftSum = t.left.sum
+		}
+		if t.id == id {
+			return sum + t.val + leftSum
+		}
+
+		if t.id > id {
+			return partialSum(t.left, i, sum)
+		}
+		return partialSum(t.right, i, sum+t.val+leftSum)
+	}
+
+	if s.t.id == i {
+		if s.t.left != nil {
+			return s.t.val + s.t.left.sum
+		} else {
+			return s.t.val
+		}
+	}
+	if s.t.id > i {
+		return partialSum(s.t.left, i, 0)
+	}
+	return partialSum(s.t.right, i, s.t.val+s.t.left.sum)
+}
+
+func ADMProblem3_13(set []int) ADMProblem3_13_Solution {
+	if len(set) == 0 {
+		return ADMProblem3_13_Solution{&Tree3_13{}}
+	}
+
+	sum := func(set []int) int {
+		sum := 0
+		for i := 0; i < len(set); i++ {
+			sum += set[i]
+		}
+		return sum
+	}
+	nodes := []*Tree3_13{}
+	for i := 0; i < len(set); i++ {
+		t := &Tree3_13{
+			id:    i + 1,
+			val:   set[i],
+			left:  nil,
+			right: nil,
+		}
+		nodes = append(nodes, t)
+	}
+
+	var assign func(nodes []*Tree3_13, set []int) *Tree3_13
+	assign = func(nodes []*Tree3_13, set []int) *Tree3_13 {
+		if len(nodes) == 0 {
+			return nil
+		}
+		id := 0
+		if len(nodes) > 1 {
+			id = len(nodes)/2 - 1
+		}
+		tr := nodes[id]
+		tr.sum = sum(set)
+		tr.left = assign(nodes[0:id], set[0:id])
+		tr.right = assign(nodes[id+1:], set[id+1:])
+		return tr
+	}
+
+	t := assign(nodes, set)
+	return ADMProblem3_13_Solution{t}
+}

@@ -4,6 +4,60 @@ import (
 	"testing"
 )
 
+func TestCheckParenthesesBalanced03(t *testing.T) {
+	for i, d := range []struct {
+		str string
+		pos int
+	}{
+		{"(())", -1},
+		{"((())())()", -1},
+		{")()(", 0},
+		{"())", 2},
+	} {
+		pos := CheckParenthesesBalanced03(d.str)
+		if pos != d.pos {
+			t.Errorf("case [%d] expected %+v, got %+v", i, d.pos, pos)
+		}
+
+	}
+}
+
+func TestCheckParenthesesBalanced02(t *testing.T) {
+	for i, d := range []struct {
+		str string
+		pos int
+	}{
+		{"(())", -1},
+		{"((())())()", -1},
+		{")()(", 0},
+		{"())", 2},
+	} {
+		pos := CheckParenthesesBalanced02(d.str)
+		if pos != d.pos {
+			t.Errorf("case [%d] expected %+v, got %+v", i, d.pos, pos)
+		}
+
+	}
+}
+
+func TestCheckParenthesesBalanced01(t *testing.T) {
+	for i, d := range []struct {
+		str string
+		pos int
+	}{
+		{"(())", -1},
+		{"((())())()", -1},
+		{")()(", 0},
+		{"())", 2},
+	} {
+		pos := CheckParenthesesBalanced01(d.str)
+		if pos != d.pos {
+			t.Errorf("case [%d] expected %+v, got %+v", i, d.pos, pos)
+		}
+
+	}
+}
+
 func TestRabinKarpSubStringSearch(t *testing.T) {
 	prime := 619
 	for i, data := range []struct {

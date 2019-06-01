@@ -52,6 +52,64 @@ var treeMirrorTestData = []struct {
 		out: true},
 }
 
+func TestADMProblem3_13_ToString(t *testing.T) {
+	data := []struct {
+		in  []int
+		out string
+	}{
+		{[]int{}, "(id=0,val=0,sum=0)"},
+		{[]int{1, 2, 3}, "(id=1,val=1,sum=6)(id=2,val=2,sum=5)(id=3,val=3,sum=3)"},
+		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, "(id=5,val=5,sum=55)(id=2,val=2,sum=10)(id=7,val=7,sum=40)(id=1,val=1,sum=1)(id=3,val=3,sum=7)(id=6,val=6,sum=6)(id=8,val=8,sum=27)(id=4,val=4,sum=4)(id=9,val=9,sum=19)(id=10,val=10,sum=10)"},
+	}
+	for i, d := range data {
+		res := ADMProblem3_13(d.in)
+		out := res.t.ToString()
+		if out != d.out {
+			t.Errorf("case [%d] expected %v, got %v", i, d.out, out)
+		}
+
+	}
+}
+func TestADMProblem3_13_PartialSum(t *testing.T) {
+	data := []struct {
+		in     []int
+		i, out int
+	}{
+		{[]int{1, 2, 3}, 1, 1},
+		{[]int{1, 2, 3, 4, 5}, 5, 15},
+		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 7, 28},
+	}
+	for i, d := range data {
+		res := ADMProblem3_13(d.in)
+		out := res.PartialSum(d.i)
+		if out != d.out {
+			t.Errorf("case [%d] expected %v, got %v", i, d.out, out)
+		}
+
+	}
+}
+
+func TestADMProblem3_13_Add(t *testing.T) {
+	data := []struct {
+		in           []int
+		i, y, x, out int
+	}{
+		{[]int{1, 2, 3}, 1, 10, 1, 11},
+		{[]int{1, 2, 3, 4, 5}, 5, 7, 3, 6},
+		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 7, 5, 8, 41},
+	}
+	for i, d := range data {
+		res := ADMProblem3_13(d.in)
+		res.Add(d.i, d.y)
+		out := res.PartialSum(d.x)
+		if out != d.out {
+			t.Errorf("case [%d] expected %v, got %v", i, d.out, out)
+		}
+
+	}
+
+}
+
 func TestTreeDelete(t *testing.T) {
 	data := []struct {
 		vals []int
