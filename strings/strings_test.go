@@ -108,6 +108,33 @@ func TestSearchMinWindow(t *testing.T) {
 	}
 
 }
+func TestSearchStrCharsInJournal(t *testing.T) {
+	for i, data := range []struct {
+		Str, Pat string
+		expected bool
+	}{
+		//		{"ABDOECBOKABABKC", "ABC", true},
+		//		{"this is a test string", "tist", true},
+		{"geeksforgeeks", "work", false},
+	} {
+		out := SearchStrCharsInJournal(data.Pat, data.Str)
+
+		if out != data.expected {
+			t.Errorf("case [%d] expected %+v, got %v \n",
+				i, data.expected, out) // output for debug
+		}
+	}
+
+}
+
+func TestReverseWordsInSentence(t *testing.T) {
+	in := "My name is Chris"
+	out := "Chris is name My"
+	res := ReverseWordsInSentence(in)
+	if res != out {
+		t.Errorf("expected %+v, got %+v", out, res)
+	}
+}
 
 func BenchmarkSearchMinWindow(b *testing.B) {
 	pat := "tist"

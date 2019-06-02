@@ -168,3 +168,47 @@ func TestListAppend(t *testing.T) {
 		}
 	}
 }
+
+func TestListFindAndFixLoop(t *testing.T) {
+	listNoLoop := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, nil}}}}}
+	listLoopAt2 := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, &Node{5, nil}}}}}}
+	listLoopAt2.head.next.next.next.next.next = listLoopAt2.head.next
+	listLoopAt3 := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, &Node{5, nil}}}}}}
+	listLoopAt3.head.next.next.next.next.next = listLoopAt3.head.next.next
+	var input = []struct {
+		in  *List
+		out *Node
+	}{
+		{listNoLoop, nil},
+		{listLoopAt2, listLoopAt2.head.next},
+		{listLoopAt3, listLoopAt3.head.next.next},
+	}
+	for i, d := range input {
+		out := d.in.FindAndFixLoop()
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}
+
+func TestListFindAndFixLoopWithMeter(t *testing.T) {
+	listNoLoop := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, nil}}}}}
+	listLoopAt2 := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, &Node{5, nil}}}}}}
+	listLoopAt2.head.next.next.next.next.next = listLoopAt2.head.next
+	listLoopAt3 := &List{head: &Node{1, &Node{2, &Node{3, &Node{4, &Node{5, nil}}}}}}
+	listLoopAt3.head.next.next.next.next.next = listLoopAt3.head.next.next
+	var input = []struct {
+		in  *List
+		out *Node
+	}{
+		{listNoLoop, nil},
+		{listLoopAt2, listLoopAt2.head.next},
+		{listLoopAt3, listLoopAt3.head.next.next},
+	}
+	for i, d := range input {
+		out := d.in.FindAndFixLoopWithMeter()
+		if out != d.out {
+			t.Errorf("case [%v] expected %v, got %v", i, d.out, out)
+		}
+	}
+}

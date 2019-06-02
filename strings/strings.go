@@ -90,3 +90,59 @@ func CheckParenthesesBalanced01(str string) int {
 	}
 	return (*st)[0].id
 }
+
+// problem ADM 3.24
+func SearchStrCharsInJournal(s1, s2 string) bool {
+	if len(s1) > len(s2) {
+		return false
+	}
+
+	freq1 := map[byte]int{}
+	for i := 0; i < len(s1); i++ {
+		freq1[s1[i]]++
+	}
+
+	for i := range s2 {
+		k := s2[i]
+		_, ok := freq1[k]
+		if ok {
+			freq1[k]--
+			if freq1[k] == 0 {
+				delete(freq1, k)
+				if len(freq1) == 0 {
+					return true
+				}
+			}
+		}
+	}
+
+	return len(freq1) == 0
+}
+
+// problem ADM 3.26
+func ReverseWordsInSentence(str string) string {
+	out := make([]byte, len(str))
+	l := 0
+	lastId := len(str)
+	for i := 0; i < len(str); i++ {
+		if str[i] == ' ' {
+			k := i - l
+			for j := lastId - l; j < lastId; j++ {
+				out[j] = str[k]
+				k++
+			}
+			lastId = lastId - l - 1
+			out[lastId] = ' '
+			l = 0
+		} else {
+			l++
+		}
+	}
+	if l > 0 {
+		for j := 0; j < l; j++ {
+			out[j] = str[len(str)-l+j]
+		}
+	}
+
+	return string(out)
+}

@@ -153,6 +153,82 @@ func (l *List) ToString() string {
 	return str.String()
 }
 
+// problem ADM 3.27
+func (l *List) FindAndFixLoop() *Node {
+	if l == nil || l.head == nil {
+		return nil
+	}
+	// find loop
+	slow, fast := l.head, l.head
+	for {
+		slow = slow.next
+		fast = fast.next.next
+		if slow == fast {
+			break
+		}
+		if fast == nil {
+			return nil
+		}
+	}
+
+	var node *Node
+	slow = l.head
+	for {
+		slow = slow.next
+		if fast.next == slow {
+			break
+		}
+		fast = fast.next
+	}
+	node = fast.next
+	fast.next = nil
+	return node
+}
+func (l *List) FindAndFixLoopWithMeter() *Node {
+	if l == nil || l.head == nil {
+		return nil
+	}
+	slow, fast := l.head, l.head
+	for {
+		slow = slow.next
+		fast = fast.next.next
+		if fast == nil {
+			return nil
+		}
+		if fast == slow {
+			break
+		}
+	}
+
+	// loop size
+	k := 0
+	for {
+		slow = slow.next
+		k++
+		if slow == fast {
+			break
+		}
+	}
+
+	slow, fast = l.head, l.head
+	for k > 0 {
+		fast = fast.next
+		k--
+	}
+
+	for {
+		slow = slow.next
+		if fast.next == slow {
+			break
+		}
+		fast = fast.next
+	}
+
+	node := fast.next
+	fast.next = nil
+	return node
+}
+
 type Node struct {
 	val  int
 	next *Node
