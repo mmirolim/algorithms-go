@@ -107,6 +107,19 @@ func (l *List) Reverse() {
 	l.head = prev
 }
 
+func (l *List) ReverseRecur() {
+	var reverse func(p, c *Node) *Node
+	reverse = func(prev, cur *Node) *Node {
+		if cur == nil {
+			return prev
+		}
+		next := cur.next
+		cur.next = prev
+		return reverse(cur, next)
+	}
+	l.head = reverse(nil, l.head)
+}
+
 func (l *List) Append(node *Node) {
 	if l.head == nil {
 		l.head = node
@@ -147,4 +160,23 @@ type Node struct {
 
 func NewNode(val int) *Node {
 	return &Node{val: val, next: nil}
+}
+
+func FindLLMiddle(ll *List) *Node {
+	if ll.head == nil {
+		return nil
+	} else if ll.head.next == nil {
+		return ll.head
+	}
+
+	n1, n2 := ll.head, ll.head
+	for {
+		n1 = n1.next
+		n2 = n2.next.next
+		if n2.next == nil {
+			break
+		}
+	}
+
+	return n1
 }

@@ -285,3 +285,68 @@ func TestTreeToString(t *testing.T) {
 		}
 	}
 }
+
+func TestTreesEqual(t *testing.T) {
+	data := []struct {
+		t1, t2 *Tree
+		out    bool
+	}{
+		{nil, nil, true},
+		{t1: &Tree{
+			val: 4,
+			left: &Tree{
+				val:  2,
+				left: nil,
+				right: &Tree{
+					val:   3,
+					left:  nil,
+					right: &Tree{val: 4},
+				},
+			},
+			right: nil},
+			t2: &Tree{
+				val: 4,
+				left: &Tree{
+					val:  2,
+					left: nil,
+					right: &Tree{
+						val:   30,
+						left:  nil,
+						right: &Tree{val: 4},
+					},
+				},
+				right: nil}, out: false},
+		{t1: &Tree{
+			val: 4,
+			left: &Tree{
+				val:  2,
+				left: nil,
+				right: &Tree{
+					val:   3,
+					left:  nil,
+					right: &Tree{val: 4},
+				},
+			},
+			right: nil,
+		}, t2: &Tree{
+			val: 4,
+			left: &Tree{
+				val:  2,
+				left: nil,
+				right: &Tree{
+					val:   3,
+					left:  nil,
+					right: &Tree{val: 4},
+				},
+			},
+			right: nil}, out: true},
+	}
+	for i, d := range data {
+		out1 := d.t1.EqualLevelOrder(d.t2)
+		out2 := d.t1.EqualInOrder(d.t2)
+		if out1 != d.out || out1 != out2 {
+			t.Errorf("case [%v] expected %v, got out1 %v out2 %v", i, d.out, out1, out2)
+		}
+	}
+
+}

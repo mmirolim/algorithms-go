@@ -213,6 +213,54 @@ func (t *Tree) ToString() string {
 	return str.String()
 }
 
+func (t *Tree) EqualLevelOrder(t2 *Tree) bool {
+	if t == t2 {
+		return true
+	}
+
+	q1, q2 := newQueue(), newQueue()
+	q1.push(t)
+	q2.push(t2)
+	for len(q1.store) > 0 {
+		n1, n2 := q1.pop(), q2.pop()
+		if n1.val != n2.val {
+			return false
+		}
+		if n1.left != nil && n2.left != nil {
+			q1.push(n1.left)
+			q2.push(n2.left)
+		} else if n1.left != n2.left {
+			return false
+		}
+
+		if n1.right != nil && n2.right != nil {
+			q1.push(n1.right)
+			q2.push(n2.right)
+		} else if n1.right != n2.right {
+			return false
+		}
+	}
+
+	return len(q2.store) == 0
+}
+
+func (t *Tree) EqualInOrder(t2 *Tree) bool {
+	var traverser func(t1, t2 *Tree) bool
+	traverser = func(t1, t2 *Tree) bool {
+		if t1 == t2 {
+			return true
+		} else if t1 == nil || t2 == nil {
+			return false
+		}
+		if t1.val != t2.val {
+			return false
+		}
+		return traverser(t1.left, t2.left) && traverser(t1.right, t2.right)
+	}
+
+	return traverser(t, t2)
+}
+
 type Tree3_13 struct {
 	id          int
 	val         int
