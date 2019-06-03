@@ -275,3 +275,33 @@ func ConvertNumberToWords(num string) string {
 	parseDigits(2)
 	return strings.Join(out, " ")
 }
+
+/*
+You have an unordered array X of n integers.
+Find the array M containing n elements where Mi
+is the product of all integers in X except for Xi.
+You may not use division. You can use extra memory.
+(Hint: There are solutions faster than O(n2).)
+*/
+func ADM_3_28(X []int) []int {
+	M := make([]int, len(X))
+	RP := make([]int, len(X))
+	LP := make([]int, len(X))
+	rp := 1
+	lp := 1
+	for i := range X {
+		rp = X[i] * rp
+		RP[i] = rp
+		lp = X[len(X)-i-1] * lp
+		LP[len(X)-i-1] = lp
+	}
+
+	M[0] = LP[0]
+	M[len(X)-1] = RP[len(X)-2]
+
+	for i := 1; i < len(M)-1; i++ {
+		M[i] = RP[i-1] * LP[i+1]
+	}
+
+	return M
+}

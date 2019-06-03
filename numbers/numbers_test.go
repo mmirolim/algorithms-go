@@ -197,3 +197,23 @@ func TestConvertNumberToWords(t *testing.T) {
 		}
 	}
 }
+
+func TestADM_3_28(t *testing.T) {
+	data := []struct {
+		X, M []int
+	}{
+		{[]int{1, 2, 3, 4, 5, 6}, []int{720, 360, 240, 180, 144, 120}},
+	}
+
+	for i, d := range data {
+		res := ADM_3_28(d.X)
+		if len(d.M) != len(res) {
+			t.Errorf("case [%v] expected %v, got %v", i, len(d.M), res)
+		}
+		for k := 0; k < len(d.M); k++ {
+			if res[k] != d.M[k] {
+				t.Errorf("case [%v] index %v expected %v, got %v", i, k, d.M[k], res[k])
+			}
+		}
+	}
+}
