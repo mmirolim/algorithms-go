@@ -305,3 +305,36 @@ func ADM_3_28(X []int) []int {
 
 	return M
 }
+
+/*
+2.8.1
+Jolly Jumpers
+PC/UVa IDs: 110201/10038,
+Popularity: A, Success rate: average Level: 1
+*/
+func IsJollyJumpers(seq []int) bool {
+	if len(seq) == 1 {
+		return true
+	}
+
+	sum := len(seq) * (len(seq) - 1) / 2
+
+	for i := 0; i < len(seq)-1; i++ {
+		d := abs(seq[i] - seq[i+1])
+		if d > len(seq)-1 || d == 0 {
+			return false
+		}
+		sum -= d
+	}
+	if sum == 0 {
+		return true
+	}
+	return false
+}
+
+func abs(i int) int {
+	if i > 0 {
+		return i
+	}
+	return -1 * i
+}

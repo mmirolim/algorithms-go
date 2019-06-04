@@ -113,8 +113,8 @@ func TestSearchStrCharsInJournal(t *testing.T) {
 		Str, Pat string
 		expected bool
 	}{
-		//		{"ABDOECBOKABABKC", "ABC", true},
-		//		{"this is a test string", "tist", true},
+		{"ABDOECBOKABABKC", "ABC", true},
+		{"this is a test string", "tist", true},
 		{"geeksforgeeks", "work", false},
 	} {
 		out := SearchStrCharsInJournal(data.Pat, data.Str)

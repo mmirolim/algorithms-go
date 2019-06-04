@@ -1,6 +1,7 @@
 package number
 
 import (
+	"math"
 	"testing"
 )
 
@@ -214,6 +215,33 @@ func TestADM_3_28(t *testing.T) {
 			if res[k] != d.M[k] {
 				t.Errorf("case [%v] index %v expected %v, got %v", i, k, d.M[k], res[k])
 			}
+		}
+	}
+}
+
+func TestIsJollyJumpers(t *testing.T) {
+	data := []struct {
+		seq []int
+		out bool
+	}{
+		{[]int{1}, true},
+		{[]int{5, 1, 4, 2, -1, 6}, false},
+		{[]int{11, 7, 4, 2, 1, 6}, true},
+		{[]int{1, 4, 2, 3}, true},
+	}
+
+	for i, d := range data {
+		res := IsJollyJumpers(d.seq)
+		if res != d.out {
+			t.Errorf("case [%v] expected %+v, got %+v", i, d.out, res)
+		}
+	}
+}
+
+func TestAbs(t *testing.T) {
+	for i, d := range []int{-10, 23, -332, 12} {
+		if int(math.Abs(float64(d))) != abs(d) {
+			t.Errorf("case [%v] expected %+v, got %+v", i, math.Abs(float64(d)), abs(d))
 		}
 	}
 }
