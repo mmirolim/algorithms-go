@@ -245,3 +245,21 @@ func TestAbs(t *testing.T) {
 		}
 	}
 }
+
+func TestFindTimeWhenAlexeyWillWakeUp(t *testing.T) {
+	data := []struct {
+		N, X, K int
+		alarms  []int
+		out     int
+	}{
+		{6, 5, 10, []int{1, 2, 3, 4, 5, 6}, 10},
+		{5, 7, 12, []int{5, 22, 17, 13, 8}, 27},
+	}
+	for i, d := range data {
+		res := FindTimeWhenAlexeyWillWakeUp(d.N, d.X, d.K, d.alarms)
+		if res != d.out {
+			t.Errorf("case [%v] expected %+v, got %+v", i, d.out, res)
+		}
+	}
+
+}

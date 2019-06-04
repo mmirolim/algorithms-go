@@ -324,14 +324,15 @@ func CryptKickerDecodeString01(words []string, text string) string {
 		}
 		return out
 	}
-
-	abc := generateAbc()
-	for i := range text {
-		v, ok := abc[text[i]]
-		if ok {
-			out[i] = v
-		} else {
-			out[i] = text[i]
+	if len(dicTextWordToDicWord) == len(textDic) {
+		abc := generateAbc()
+		for i := range text {
+			v, ok := abc[text[i]]
+			if ok {
+				out[i] = v
+			} else {
+				out[i] = text[i]
+			}
 		}
 	}
 

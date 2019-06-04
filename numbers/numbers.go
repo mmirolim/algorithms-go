@@ -1,6 +1,7 @@
 package number
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -337,4 +338,23 @@ func abs(i int) int {
 		return i
 	}
 	return -1 * i
+}
+
+// problem https://codereview.stackexchange.com/questions/221113/yandex-programming-contest-alarms
+func FindTimeWhenAlexeyWillWakeUp(n, x, k int, alarms []int) int {
+	d := 1
+	if k%n == 0 {
+		d = k / n
+	} else {
+		d = k/n + 1
+	}
+
+	lastAlarms := make([]int, n)
+	for i := range lastAlarms {
+		lastAlarms[i] = alarms[i] + x*(d-1)
+	}
+
+	sort.Ints(lastAlarms)
+
+	return lastAlarms[k%n]
 }
