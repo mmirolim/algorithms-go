@@ -144,3 +144,27 @@ func BenchmarkSearchMinWindow(b *testing.B) {
 		_, _ = searchMinWindow(pat, str)
 	}
 }
+
+func TestCryptKickerDecodeString01(t *testing.T) {
+	words := []string{
+		"and",
+		"dick",
+		"jane",
+		"puff",
+		"spot",
+		"yertle",
+	}
+	for i, d := range []struct {
+		str, out string
+	}{
+		{"bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
+		{"xxxx yyy zzzz www yyyy aaa bbbb ccc dddddd", "**** *** **** *** **** *** **** *** ******"},
+	} {
+		out := CryptKickerDecodeString01(words, d.str)
+		if out != d.out {
+			t.Errorf("case [%d] expected %+v, got %v \n",
+				i, d.out, out) // output for debug
+		}
+	}
+
+}
