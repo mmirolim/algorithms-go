@@ -212,7 +212,7 @@ func CryptKickerDecodeString01(words []string, text string) string {
 
 	IsAllLettersOneToOne := func() bool {
 		dicAbc := uint64(0)
-		abc := [25]int{}
+		abc := [26]int{}
 		for i := range abc {
 			abc[i] = -1
 		}
@@ -355,4 +355,121 @@ func Permutate(s string) []string {
 	permutate([]byte(s), 0, len(s)-1)
 	return out
 
+}
+
+/*
+Crypt Kicker
+PC/UVa IDs: 110204/843,
+Popularity: B, Success rate: low Level: 2
+*/
+func CryptKickerDecodeStringRecur(words []string, text string) string {
+	out := make([]byte, len(text))
+	for i := 0; i < len(text); i++ {
+		if text[i] == ' ' {
+			out[i] = ' '
+		} else {
+			out[i] = '*'
+		}
+	}
+	textWords := func() []string {
+		var out []string
+		m := make(map[string]bool)
+		l := 0
+		for i := 0; i < len(text); i++ {
+			if text[i] == ' ' {
+				m[text[i-l:i]] = true
+				l = 0
+			} else {
+				l++
+			}
+		}
+		if l > 0 {
+			m[text[len(text)-1-l+1:]] = true
+		}
+		for k := range m {
+			out = append(out, k)
+		}
+		return out
+	}()
+
+	abc := make([]byte, 27)
+	abcInverse := make([]byte, 27)
+	baseNum := byte(96)
+
+	setChar := func(a, x byte) bool {
+		aInAbc := abc[a-baseNum]
+		xInAbcInverse := abcInverse[x-baseNum]
+		// not yet set
+		if aInAbc == 0 && xInAbcInverse == 0 {
+			abc[a-baseNum] = x
+			abcInverse[x-baseNum] = a
+			return true
+		} else if aInAbc == x && xInAbcInverse == a {
+			// already set but does not violate one-to-one constraint
+			return true
+		}
+
+		return false
+	}
+	// removes chars which was set
+	rmWordCharsFromSet := func(textWord, dicWord string) {
+		for i := 0; i < len(textWord); i++ {
+			if abc[textWord[i]-baseNum] == dicWord[i] && abcInverse[dicWord[i]-baseNum] == textWord[i] {
+				abc[textWord[i]-baseNum] = 0
+				abcInverse[dicWord[i]-baseNum] = 0
+			}
+		}
+	}
+
+	setWordChars := func(textWord, dicWord string) bool {
+		for i := 0; i < len(dicWord); i++ {
+			if !setChar(textWord[i], dicWord[i]) {
+				return false
+			}
+		}
+		return true
+	}
+
+	var recurMap func(twId, wId int) bool
+
+	recurMap = func(twId, wId int) bool {
+		if twId == len(textWords) {
+			return true
+		}
+
+		if len(textWords[twId]) != len(words[wId]) {
+			return false
+		}
+
+		if !setWordChars(textWords[twId], words[wId]) {
+			rmWordCharsFromSet(textWords[twId], words[wId])
+			return false
+		}
+
+		for i := 0; i < len(words); i++ {
+			if recurMap(twId+1, i) {
+				return true
+			}
+		}
+
+		rmWordCharsFromSet(textWords[twId], words[wId])
+		return false
+	}
+
+	for j := 0; j < len(words); j++ {
+		if recurMap(0, j) {
+			// found solution
+			for i := 0; i < len(text); i++ {
+				if text[i] == ' ' {
+					out[i] = text[i]
+				} else {
+					out[i] = abc[text[i]-baseNum]
+				}
+			}
+
+			return string(out)
+		}
+	}
+
+	return string(out)
 }

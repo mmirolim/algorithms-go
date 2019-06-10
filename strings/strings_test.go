@@ -146,21 +146,78 @@ func BenchmarkSearchMinWindow(b *testing.B) {
 }
 
 func TestCryptKickerDecodeString01(t *testing.T) {
-	words := []string{
+	for i, d := range []struct {
+		words    []string
+		str, out string
+	}{{[]string{
 		"and",
+		"puff",
 		"dick",
 		"jane",
-		"puff",
-		"spot",
 		"yertle",
+		"spot",
+	},
+
+		"bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
+
+		{[]string{
+			"and",
+			"dick",
+			"jane",
+			"puff",
+			"spot",
+			"yertle",
+		}, "bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
+		{[]string{
+			"and",
+			"dick",
+			"jane",
+			"puff",
+			"spot",
+			"yertle",
+		}, "xxxx yyy zzzz www yyyy aaa bbbb ccc dddddd", "**** *** **** *** **** *** **** *** ******"},
+	} {
+		out := CryptKickerDecodeString01(d.words, d.str)
+		if out != d.out {
+			t.Errorf("case [%d] expected %+v, got %v \n",
+				i, d.out, out) // output for debug
+		}
 	}
+
+}
+func TestCryptKickerDecodeStringRecur(t *testing.T) {
 	for i, d := range []struct {
+		words    []string
 		str, out string
 	}{
-		{"bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
-		{"xxxx yyy zzzz www yyyy aaa bbbb ccc dddddd", "**** *** **** *** **** *** **** *** ******"},
+		{[]string{
+			"and",
+			"puff",
+			"dick",
+			"jane",
+			"yertle",
+			"spot",
+		},
+
+			"bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
+		{[]string{
+			"and",
+			"dick",
+			"jane",
+			"puff",
+			"spot",
+			"yertle",
+		}, "bjvg xsb hxsn xsb qymm xsb rqat xsb pnetfn", "dick and jane and puff and spot and yertle"},
+		{[]string{
+			"and",
+			"dick",
+			"jane",
+			"puff",
+			"spot",
+			"yertle",
+		}, "xxxx yyy zzzz www yyyy aaa bbbb ccc dddddd", "**** *** **** *** **** *** **** *** ******"},
 	} {
-		out := CryptKickerDecodeString01(words, d.str)
+		out := CryptKickerDecodeStringRecur(d.words, d.str)
 		if out != d.out {
 			t.Errorf("case [%d] expected %+v, got %v \n",
 				i, d.out, out) // output for debug
