@@ -225,3 +225,37 @@ func TestCryptKickerDecodeStringRecur(t *testing.T) {
 	}
 
 }
+
+func TestWhereIsWaldorfFindString(t *testing.T) {
+	data := []struct {
+		grid  []string
+		words []string
+		pos   []int
+	}{
+		{
+			[]string{"abcDEFGhigg",
+				"hEbkWalDork",
+				"FtyAwaldORm",
+				"FtsimrLqsrc",
+				"byoArBeDeyv",
+				"Klcbqwikomk",
+				"strEBGadhrb",
+				"yUiqlxcnBjf"},
+			[]string{
+				"Waldorf",
+				"Bambi",
+				"Betty",
+				"Dagbert"},
+			[]int{2, 5, 2, 3, 1, 2, 7, 8},
+		},
+	}
+
+	for i, d := range data {
+		out := WhereIsWaldorfFindString(d.grid, d.words)
+		for j := range d.words {
+			if d.pos[j*2] != out[j*2] || d.pos[j*2+1] != out[j*2+1] {
+				t.Errorf("case [%v] expected row %v cow %v got row %v col %v for word %v", i, d.pos[j*2], d.pos[j*2+1], out[j*2], out[j*2+1], d.words[j])
+			}
+		}
+	}
+}

@@ -473,3 +473,198 @@ func CryptKickerDecodeStringRecur(words []string, text string) string {
 
 	return string(out)
 }
+
+/*
+3.8.2
+Where’s Waldorf ?
+PC/UVa IDs: 110302/10010, Popularity: B, Success rate: average Level: 2
+*/
+func WhereIsWaldorfFindString(grid []string, strs []string) []int {
+	out := make([]int, 0, len(strs)*2)
+	computeWaysLen := func(r, c int, g [][]byte) []int {
+		o := make([]int, 8)
+		// right
+		o[0] = len(g[0]) - c
+		// down right
+		if o[0] > len(g)-r {
+			o[1] = len(g) - r
+		} else {
+			o[1] = o[0]
+		}
+		// down
+		o[2] = len(g) - r
+		// down left
+		if o[2] > c+1 {
+			o[3] = c + 1
+		} else {
+			o[3] = o[2]
+		}
+		// left
+		o[4] = c + 1
+		// up left
+		if o[4] > c+1 {
+			o[5] = c + 1
+		} else {
+			o[5] = o[4]
+		}
+		// up
+		o[6] = r + 1
+		// up right
+		if o[6] > len(g[0])-c {
+			o[7] = len(g[0]) - c
+		} else {
+			o[7] = o[6]
+		}
+		return o
+	}
+	// pre process grid
+	lcGrid := make([][]byte, len(grid))
+	// index for inverse char search
+	index := [27][][]int{}
+	baseNum := byte(96)
+	for i := range grid {
+		lcGrid[i] = []byte(grid[i])
+		for j := 0; j < len(lcGrid[i]); j++ {
+			data := make([]int, 0, 10)
+			ch := lcGrid[i][j]
+			// ch is ascii chars
+			if ch < 91 {
+				ch += 32
+			}
+
+			lcGrid[i][j] = ch
+			// set positions
+			data = append(data, i)
+			data = append(data, j)
+			// compute len of all 8 ways
+			ls := computeWaysLen(i, j, lcGrid)
+			data = append(data, ls...)
+			index[ch-baseNum] = append(index[ch-baseNum], data)
+		}
+	}
+	lowerCaseWord := func(s string) []byte {
+		o := make([]byte, len(s))
+		for i := 0; i < len(s); i++ {
+			if s[i] < 91 {
+				o[i] = s[i] + 32
+			} else {
+				o[i] = s[i]
+			}
+		}
+		return o
+	}
+	// check functions for each way
+	checkRight := func(w []byte, r, c int, g [][]byte) bool {
+		j := 0
+		for i := c; i < c+len(w); i++ {
+			if g[r][i] != w[j] {
+				return false
+			}
+			j++
+		}
+		return true
+	}
+	checkDownRight := func(w []byte, r, c int, g [][]byte) bool {
+		for i := 0; i < len(w); i++ {
+			if g[r+i][c+i] != w[i] {
+				return false
+			}
+		}
+		return true
+	}
+	checkDown := func(w []byte, r, c int, g [][]byte) bool {
+		j := 0
+		for i := r; i < r+len(w); i++ {
+			if g[i][c] != w[j] {
+				return false
+			}
+			j++
+		}
+		return true
+	}
+	checkDownLeft := func(w []byte, r, c int, g [][]byte) bool {
+		for i := 0; i < len(w); i++ {
+			if g[r+i][c-i] != w[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	checkLeft := func(w []byte, r, c int, g [][]byte) bool {
+		j := 0
+		for i := c; i > c-len(w); i-- {
+			if g[r][i] != w[j] {
+				return false
+			}
+			j++
+		}
+		return true
+	}
+	checkUpLeft := func(w []byte, r, c int, g [][]byte) bool {
+		for i := 0; i < len(w); i++ {
+			if g[r-i][c-i] != w[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	checkUp := func(w []byte, r, c int, g [][]byte) bool {
+		j := 0
+		for i := r; i > r-len(w); i-- {
+			if g[i][c] != w[j] {
+				return false
+			}
+			j++
+		}
+		return true
+	}
+
+	checkUpRight := func(w []byte, r, c int, g [][]byte) bool {
+		for i := 0; i < len(w); i++ {
+			if g[r-i][c+i] != w[i] {
+				return false
+			}
+		}
+		return true
+	}
+
+	// match is case sensitive
+	findWord := func(w []byte, index [27][][]int, grid [][]byte) []int {
+		type checkFn func(w []byte, r, c int, g [][]byte) bool
+		var res []int
+		// load index for word's frist char
+		data := index[w[0]-baseNum]
+		for i := range data {
+			r, c := data[i][0], data[i][1]
+			checkFns := []checkFn{
+				// order according to index lens computed
+				checkRight, checkDownRight, checkDown, checkDownLeft,
+				checkLeft, checkUpLeft, checkUp, checkUpRight,
+			}
+			for j, fn := range checkFns {
+				// check if we have space for matching full word
+				if data[i][j+2] >= len(w) && fn(w, r, c, grid) {
+					res = append(res, r+1)
+					res = append(res, c+1)
+					// we need topmost, leftmost value
+					// it will be the frist match
+					break
+				}
+			}
+
+		}
+		return res
+	}
+
+	// main loop
+	for i := 0; i < len(strs); i++ {
+		w := lowerCaseWord(strs[i])
+		res := findWord(w, index, lcGrid)
+		// word presense expected
+		out = append(out, res...)
+	}
+
+	return out
+}
