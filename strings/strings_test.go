@@ -259,3 +259,37 @@ func TestWhereIsWaldorfFindString(t *testing.T) {
 		}
 	}
 }
+
+func TestCryptKickerIIDecodeString(t *testing.T) {
+	for i, d := range []struct {
+		knownLine string
+		lines     []string
+		out       []string
+	}{
+		{"the quick brown fox jumps over the lazy dog",
+			[]string{
+				"vtz ud xnm xugm itr pyy jttk gmv xt otgm xt xnm puk ti xnm fprxq",
+				"xnm ceuob lrtzv ita hegfd tsmr xnm ypwq ktj",
+				"frtjrpgguvj otvxmdxd prm iev prmvx xnmq",
+			},
+			[]string{
+				"now is the time for all good men to come to the aid of the party",
+				"the quick brown fox jumps over the lazy dog",
+				"programming contests are fun arent they",
+			},
+		},
+	} {
+		out := CryptKickerIIDecodeString(d.knownLine, d.lines)
+		if len(out) != len(d.out) {
+			t.Errorf("case [%d] expected %+v, got %v \n",
+				i, len(d.out), len(out)) // output for debug
+		}
+		for j := range out {
+			if out[j] != d.out[j] {
+				t.Errorf("case [%d] expected %+v, got %v \n",
+					i, d.out, out) // output for debug
+			}
+		}
+	}
+
+}

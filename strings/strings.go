@@ -668,3 +668,94 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 
 	return out
 }
+
+/*
+3.8.2
+Where’s Waldorf ?
+PC/UVa IDs: 110302/10010, Popularity: B, Success rate: average Level: 2
+*/
+func WhereIsWaldorfFindStringUsingTrie(grid []string, strs []string) []int {
+	panic("not implemented")
+	return nil
+}
+
+/*
+3.8.4
+Crypt Kicker II
+PC/UVa IDs: 110304/850, Popularity: A, Success rate: average Level: 2
+*/
+func CryptKickerIIDecodeString(knownLine string, lines []string) (out []string) {
+	maxPos := len(knownLine)
+	// positional hash
+	hash := func(s string) int {
+		dic := map[byte]int{}
+		h := 0
+		for i := 0; i < len(s); i++ {
+			v, ok := dic[s[i]]
+			if !ok {
+				dic[s[i]] = i
+				v = i
+			}
+			h = (h*maxPos + v) % 1001
+		}
+		return h
+	}
+	hashKnownLine := hash(knownLine)
+	abc := make([]byte, 27)
+	abcInverse := make([]byte, 27)
+	baseNum := byte(96)
+
+	checkConstraint := func(ech, dch byte) bool {
+		if abc[ech-baseNum] == dch {
+			// already set
+			return true
+		} else if abc[ech-baseNum] == 0 && abcInverse[dch-baseNum] == 0 {
+			// chars not yet set
+			return true
+		}
+		return false
+	}
+
+	createAbc := func(ds, es string) bool {
+		for i := 0; i < len(es); i++ {
+			if es[i] == ' ' {
+				continue
+			}
+			if checkConstraint(es[i], ds[i]) {
+				abc[es[i]-baseNum] = ds[i]
+				abcInverse[ds[i]-baseNum] = es[i]
+			} else {
+				return false
+			}
+		}
+		return true
+	}
+
+	decodeString := func(es string) string {
+		out := make([]byte, len(es))
+		for i := 0; i < len(es); i++ {
+			if es[i] != ' ' {
+				out[i] = abc[es[i]-baseNum]
+			} else {
+				out[i] = ' '
+			}
+		}
+		return string(out)
+	}
+
+	for i := 0; i < len(lines); i++ {
+		if len(lines[i]) == len(knownLine) && hash(lines[i]) == hashKnownLine {
+			if createAbc(knownLine, lines[i]) {
+				for j := range lines {
+					out = append(out, decodeString(lines[j]))
+				}
+				break
+			} else {
+				// there is match but alphabet not created
+				return
+			}
+		}
+	}
+
+	return
+}
