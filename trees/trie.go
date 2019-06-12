@@ -45,6 +45,30 @@ func (t *Trie) newNode() *trieNode {
 		isEndOfWord: false}
 }
 
+type TrieWalker struct {
+	t *Trie
+	n *trieNode
+}
+
+type TrieWalkerResult struct {
+	IsWord bool
+	Val    interface{}
+}
+
+// returns isWord, value of word node and next walker
+func (w *TrieWalker) Next(ch byte) *TrieWalkerResult {
+	node := w.n.children[w.t.charToAbcID(ch)]
+	if node == nil {
+		return nil
+	}
+	w.n = node
+	return &TrieWalkerResult{node.isEndOfWord, node.val}
+}
+
+func (t *Trie) NewCharWalker() *TrieWalker {
+	return &TrieWalker{t, t.root}
+}
+
 // for ascii chars
 func (t *Trie) Insert(str string, val interface{}) {
 	node := t.root

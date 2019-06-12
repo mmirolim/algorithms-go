@@ -2,6 +2,8 @@ package strings
 
 import (
 	"strings"
+
+	tree "github.com/mmirolim/algos/trees"
 )
 
 type chIndex struct {
@@ -480,7 +482,6 @@ Where’s Waldorf ?
 PC/UVa IDs: 110302/10010, Popularity: B, Success rate: average Level: 2
 max grid size 1 ≤ m, n ≤ 50
 */
-
 func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 	out := make([]int, 0, len(strs)*2)
 	computeWaysLen := func(r, c int8, o *[8]int8, g [][]byte) {
@@ -677,9 +678,170 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 Where’s Waldorf ?
 PC/UVa IDs: 110302/10010, Popularity: B, Success rate: average Level: 2
 */
-func WhereIsWaldorfFindStringUsingTrie(grid []string, strs []string) []int {
-	panic("not implemented")
-	return nil
+func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
+	type checkFn func(r, c int, g [][]byte, index *tree.Trie) (int, bool)
+	out := make([]int, 2*len(words))
+	g := make([][]byte, len(grid))
+	for i := range grid {
+		g[i] = []byte(strings.ToLower(grid[i]))
+	}
+	createTrieFromWords := func(words []string) *tree.Trie {
+		trie := tree.NewTrieForCaseInsensitveAlphabet26()
+		for i := range words {
+			// use word's slice id as val
+			trie.Insert(words[i], i)
+		}
+		return trie
+	}
+	index := createTrieFromWords(words)
+
+	checkRight := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		for i := c; i < len(g[0]); i++ {
+			res := walker.Next(g[r][i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+
+		}
+		return -1, false
+	}
+	checkDownRight := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		end := len(g) - r
+		if end > len(g[0])-c {
+			end = len(g[0]) - c
+		}
+		for i := 0; i < end; i++ {
+			res := walker.Next(g[r+i][c+i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	checkDown := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		for i := r; i < len(g); i++ {
+			res := walker.Next(g[i][c])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+
+		}
+		return -1, false
+	}
+	checkDownLeft := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		end := len(g) - r
+		if end > c {
+			end = c
+		}
+		for i := 0; i < end; i++ {
+			res := walker.Next(g[r+i][c-i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	checkLeft := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		for i := c; i > -1; i-- {
+			res := walker.Next(g[r][i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	checkLeftUp := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		end := r
+		if end > c {
+			end = c
+		}
+		for i := 0; i < end; i++ {
+			res := walker.Next(g[r-i][c-i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	checkUp := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		for i := r; i > -1; i-- {
+			res := walker.Next(g[i][c])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	checkUpRight := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
+		walker := index.NewCharWalker()
+		end := r
+		if end > len(g[0])-c {
+			end = len(g[0]) - c
+		}
+		for i := 0; i < end; i++ {
+			res := walker.Next(g[r-i][c+i])
+			if res != nil {
+				if res.IsWord {
+					return res.Val.(int), true
+				}
+			} else {
+				break
+			}
+		}
+		return -1, false
+	}
+	fns := []checkFn{
+		checkRight, checkDownRight, checkDown, checkDownLeft,
+		checkLeft, checkLeftUp, checkUp, checkUpRight,
+	}
+	// walk over grid and check matching from index in all 8 ways
+	for r := 0; r < len(grid); r++ {
+		for c := 0; c < len(grid[r]); c++ {
+			for _, fn := range fns {
+				if id, ok := fn(r, c, g, index); ok {
+					out[id*2] = r + 1
+					out[id*2+1] = c + 1
+					break
+				}
+			}
+		}
+	}
+	return out
 }
 
 /*

@@ -260,6 +260,41 @@ func TestWhereIsWaldorfFindString(t *testing.T) {
 	}
 }
 
+func TestWhereIsWaldorfFindStringUsingTrie(t *testing.T) {
+	data := []struct {
+		grid  []string
+		words []string
+		pos   []int
+	}{
+		{
+			[]string{"abcDEFGhigg",
+				"hEbkWalDork",
+				"FtyAwaldORm",
+				"FtsimrLqsrc",
+				"byoArBeDeyv",
+				"Klcbqwikomk",
+				"strEBGadhrb",
+				"yUiqlxcnBjf"},
+			[]string{
+				"Waldorf",
+				"Bambi",
+				"Betty",
+				"Dagbert",
+			},
+			[]int{2, 5, 2, 3, 1, 2, 7, 8},
+		},
+	}
+
+	for i, d := range data {
+		out := WhereIsWaldorfFindStringUsingTrie(d.grid, d.words)
+		for j := range d.words {
+			if d.pos[j*2] != out[j*2] || d.pos[j*2+1] != out[j*2+1] {
+				t.Errorf("case [%v] expected row %v cow %v got row %v col %v for word %v", i, d.pos[j*2], d.pos[j*2+1], out[j*2], out[j*2+1], d.words[j])
+			}
+		}
+	}
+}
+
 func TestCryptKickerIIDecodeString(t *testing.T) {
 	for i, d := range []struct {
 		knownLine string
@@ -292,4 +327,49 @@ func TestCryptKickerIIDecodeString(t *testing.T) {
 		}
 	}
 
+}
+func BenchmarkWhereIsWaldorfFindString(b *testing.B) {
+	grid := []string{
+		"abcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhigg",
+		"hEbkWalDorkhEbkWalDorkhEbkWalDorkhEbkWalDorkhEbkWalDork",
+		"FtyAwaldORmFtyAwaldORmFtyAwaldORmFtyAwaldORmFtyAwaldORm",
+		"FtsimrLqsrcFtsimrLqsrcFtsimrLqsrcFtsimrLqsrcFtsimrLqsrc",
+		"byoArBeDeyvbyoArBeDeyvbyoArBeDeyvbyoArBeDeyvbyoArBeDeyv",
+		"KlcbqwikomkKlcbqwikomkKlcbqwikomkKlcbqwikomkKlcbqwikomk",
+		"strEBGadhrbstrEBGadhrbstrEBGadhrbstrEBGadhrbstrEBGadhrb",
+		"yUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjf"}
+
+	words := []string{
+		"Waldorf",
+		"Bambi",
+		"Betty",
+		"Dagbert",
+	}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = WhereIsWaldorfFindString(grid, words)
+	}
+}
+
+func BenchmarkWhereIsWaldorfFindStringUsingTrie(b *testing.B) {
+	grid := []string{
+		"abcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhigg",
+		"hEbkWalDorkhEbkWalDorkhEbkWalDorkhEbkWalDorkhEbkWalDork",
+		"FtyAwaldORmFtyAwaldORmFtyAwaldORmFtyAwaldORmFtyAwaldORm",
+		"FtsimrLqsrcFtsimrLqsrcFtsimrLqsrcFtsimrLqsrcFtsimrLqsrc",
+		"byoArBeDeyvbyoArBeDeyvbyoArBeDeyvbyoArBeDeyvbyoArBeDeyv",
+		"KlcbqwikomkKlcbqwikomkKlcbqwikomkKlcbqwikomkKlcbqwikomk",
+		"strEBGadhrbstrEBGadhrbstrEBGadhrbstrEBGadhrbstrEBGadhrb",
+		"yUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjfyUiqlxcnBjf"}
+
+	words := []string{
+		"Waldorf",
+		"Bambi",
+		"Betty",
+		"Dagbert",
+	}
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = WhereIsWaldorfFindStringUsingTrie(grid, words)
+	}
 }
