@@ -478,21 +478,24 @@ func CryptKickerDecodeStringRecur(words []string, text string) string {
 3.8.2
 Where’s Waldorf ?
 PC/UVa IDs: 110302/10010, Popularity: B, Success rate: average Level: 2
+max grid size 1 ≤ m, n ≤ 50
 */
+
 func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 	out := make([]int, 0, len(strs)*2)
-	computeWaysLen := func(r, c int, g [][]byte) []int {
-		o := make([]int, 8)
+	computeWaysLen := func(r, c int8, o *[8]int8, g [][]byte) {
+		maxCol := int8(len(g[0]))
+		maxRow := int8(len(g))
 		// right
-		o[0] = len(g[0]) - c
+		o[0] = maxCol - c
 		// down right
-		if o[0] > len(g)-r {
-			o[1] = len(g) - r
+		if o[0] > maxRow-r {
+			o[1] = maxRow - r
 		} else {
 			o[1] = o[0]
 		}
 		// down
-		o[2] = len(g) - r
+		o[2] = maxRow - r
 		// down left
 		if o[2] > c+1 {
 			o[3] = c + 1
@@ -502,30 +505,30 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 		// left
 		o[4] = c + 1
 		// up left
-		if o[4] > c+1 {
-			o[5] = c + 1
+		if o[4] > r+1 {
+			o[5] = r + 1
 		} else {
 			o[5] = o[4]
 		}
 		// up
 		o[6] = r + 1
 		// up right
-		if o[6] > len(g[0])-c {
-			o[7] = len(g[0]) - c
+		if o[6] > maxCol-c {
+			o[7] = maxCol - c
 		} else {
 			o[7] = o[6]
 		}
-		return o
 	}
 	// pre process grid
 	lcGrid := make([][]byte, len(grid))
 	// index for inverse char search
-	index := [27][][]int{}
+	index := [27][][]int8{}
 	baseNum := byte(96)
+	waysLenArr := [8]int8{}
 	for i := range grid {
 		lcGrid[i] = []byte(grid[i])
 		for j := 0; j < len(lcGrid[i]); j++ {
-			data := make([]int, 0, 10)
+			data := [10]int8{}
 			ch := lcGrid[i][j]
 			// ch is ascii chars
 			if ch < 91 {
@@ -534,12 +537,12 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 
 			lcGrid[i][j] = ch
 			// set positions
-			data = append(data, i)
-			data = append(data, j)
+			data[0] = int8(i)
+			data[1] = int8(j)
 			// compute len of all 8 ways
-			ls := computeWaysLen(i, j, lcGrid)
-			data = append(data, ls...)
-			index[ch-baseNum] = append(index[ch-baseNum], data)
+			computeWaysLen(int8(i), int8(j), &waysLenArr, lcGrid)
+			copy(data[2:], waysLenArr[:])
+			index[ch-baseNum] = append(index[ch-baseNum], data[:])
 		}
 	}
 	lowerCaseWord := func(s string) []byte {
@@ -631,7 +634,7 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 	}
 
 	// match is case sensitive
-	findWord := func(w []byte, index [27][][]int, grid [][]byte) []int {
+	findWord := func(w []byte, index [27][][]int8, grid [][]byte) []int {
 		type checkFn func(w []byte, r, c int, g [][]byte) bool
 		var res []int
 		// load index for word's frist char
@@ -645,9 +648,9 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 			}
 			for j, fn := range checkFns {
 				// check if we have space for matching full word
-				if data[i][j+2] >= len(w) && fn(w, r, c, grid) {
-					res = append(res, r+1)
-					res = append(res, c+1)
+				if data[i][j+2] >= int8(len(w)) && fn(w, int(r), int(c), grid) {
+					res = append(res, int(r+1))
+					res = append(res, int(c+1))
 					// we need topmost, leftmost value
 					// it will be the frist match
 					break
