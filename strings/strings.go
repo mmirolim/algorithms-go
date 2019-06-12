@@ -698,10 +698,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 	checkRight := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
 		walker := index.NewCharWalker()
 		for i := c; i < len(g[0]); i++ {
-			res := walker.Next(g[r][i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r][i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -717,10 +717,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 			end = len(g[0]) - c
 		}
 		for i := 0; i < end; i++ {
-			res := walker.Next(g[r+i][c+i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r+i][c+i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -731,10 +731,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 	checkDown := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
 		walker := index.NewCharWalker()
 		for i := r; i < len(g); i++ {
-			res := walker.Next(g[i][c])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[i][c])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -750,10 +750,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 			end = c
 		}
 		for i := 0; i < end; i++ {
-			res := walker.Next(g[r+i][c-i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r+i][c-i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -764,10 +764,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 	checkLeft := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
 		walker := index.NewCharWalker()
 		for i := c; i > -1; i-- {
-			res := walker.Next(g[r][i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r][i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -782,10 +782,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 			end = c
 		}
 		for i := 0; i < end; i++ {
-			res := walker.Next(g[r-i][c-i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r-i][c-i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -796,10 +796,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 	checkUp := func(r, c int, g [][]byte, index *tree.Trie) (int, bool) {
 		walker := index.NewCharWalker()
 		for i := r; i > -1; i-- {
-			res := walker.Next(g[i][c])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[i][c])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
@@ -814,10 +814,10 @@ func WhereIsWaldorfFindStringUsingTrie(grid []string, words []string) []int {
 			end = len(g[0]) - c
 		}
 		for i := 0; i < end; i++ {
-			res := walker.Next(g[r-i][c+i])
-			if res != nil {
-				if res.IsWord {
-					return res.Val.(int), true
+			walker = walker.Next(g[r-i][c+i])
+			if walker != nil {
+				if walker.IsWord() {
+					return walker.NodeVal().(int), true
 				}
 			} else {
 				break
