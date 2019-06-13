@@ -120,7 +120,6 @@ func (t *Trie) String() []string {
 	}
 	for ch, n := range t.root.children {
 		walk(n, ch, str)
-		str = str[:0]
 	}
 	return out
 }
