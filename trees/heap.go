@@ -36,7 +36,11 @@ func newHeap(size int, toSwap func(a, b int) bool) (*Heap, error) {
 	return h, nil
 }
 
-func newHeapFrom(heap func(int) (*Heap, error), keys []int, vals []interface{}) (*Heap, error) {
+func newHeapFrom(
+	heap func(int) (*Heap, error),
+	keys []int,
+	vals []interface{},
+) (*Heap, error) {
 	if vals != nil && len(keys) != len(vals) {
 		return nil, errors.New("wrong number of keys or vals")
 	}
@@ -46,12 +50,16 @@ func newHeapFrom(heap func(int) (*Heap, error), keys []int, vals []interface{}) 
 	}
 	if vals == nil {
 		for i := range keys {
-			err = h.Insert(keys[i], nil)
+			h.arr = append(h.arr, heapVal{keys[i], nil})
 		}
 	} else {
 		for i := range keys {
-			err = h.Insert(keys[i], vals[i])
+			h.arr = append(h.arr, heapVal{keys[i], vals[i]})
 		}
+	}
+	// heapify
+	for i := len(h.arr) - 1; i >= 0; i-- {
+		h.bubbleDown(i)
 	}
 	return h, err
 }
