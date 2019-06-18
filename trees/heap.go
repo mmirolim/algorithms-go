@@ -93,6 +93,23 @@ func (h *Heap) Insert(key int, val interface{}) error {
 	return nil
 }
 
+func (h *Heap) IsEmpty() bool {
+	return len(h.arr) == 0
+}
+
+func (h *Heap) Peek() (int, interface{}, error) {
+	if h.IsEmpty() {
+		return -1, nil, ErrHeapIsEmpty
+	}
+	return h.arr[0].key, h.arr[0].data, nil
+}
+func (h *Heap) PeekKey() (int, error) {
+	if h.IsEmpty() {
+		return -1, ErrHeapIsEmpty
+	}
+	return h.arr[0].key, nil
+}
+
 // extracts top element in case of MinHeap it is min
 // for MaxHeap max
 func (h *Heap) ExtractTop() (int, interface{}, error) {
