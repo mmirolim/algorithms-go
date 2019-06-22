@@ -1,7 +1,9 @@
 package sorting
 
 import (
+	"math"
 	"math/rand"
+	"sort"
 )
 
 func merge(in1, in2 []int) []int {
@@ -65,4 +67,79 @@ func QuickSort(in *[]int) {
 		p2 := (*in)[p+1:]
 		QuickSort(&p2)
 	}
+}
+
+type Point struct {
+	id   int
+	x, y float64
+}
+
+func FindMaxWallIntersectAimPoint(points []Point, q Point) Point {
+	var aim Point
+	radialAngle := func(q, p Point) float64 {
+		return math.Atan((p.y - q.y) / (p.x - q.x))
+	}
+	makeSegments := func(ps []Point) [][2]Point {
+		out := make([][2]Point, 0, len(ps))
+		for i := 0; i < len(ps); i++ {
+			out = append(out, [2]Point{ps[i], ps[(i+1)%len(ps)]})
+		}
+		return out
+	}
+	segments := makeSegments(points)
+	type taggedPoint struct {
+		point Point
+		start bool
+		phi   float64
+	}
+	tagPointFromSegment := func(s [2]Point) (taggedPoint, taggedPoint) {
+		var t1, t2 taggedPoint
+		t1.phi = radialAngle(q, s[0])
+		t1.point = s[0]
+		t2.phi = radialAngle(q, s[1])
+		t2.point = s[1]
+		// counterclockwise orientation,
+		// start from smaller to bigger angle in segment
+		if t1.phi < t2.phi {
+			t1.start = true
+		} else {
+			t2.start = true
+		}
+		return t1, t2
+	}
+	tagPoints := func(ss [][2]Point) []taggedPoint {
+		out := make([]taggedPoint, 2*len(ss))
+		for i := 0; i < len(ss); i++ {
+			tp1, tp2 := tagPointFromSegment(ss[i])
+			out[2*i], out[2*i+1] = tp1, tp2
+		}
+		return out
+	}
+	taggedPoints := tagPoints(segments)
+	sortTaggedPoints := func(tps []taggedPoint) []taggedPoint {
+		sort.Slice(tps, func(i, j int) bool {
+			if tps[i].phi < tps[j].phi {
+				return true
+			} else if math.Abs(tps[i].phi-tps[j].phi) < 0.00001 && tps[i].start {
+				// if equal place first start point
+				return true
+			}
+			return false
+		})
+		return tps
+	}
+	sortedTaggedPoints := sortTaggedPoints(taggedPoints)
+	count, lastMax := 0, 0
+	for i := range sortedTaggedPoints {
+		if sortedTaggedPoints[i].start {
+			count++
+			if count > lastMax {
+				lastMax = count
+				aim = sortedTaggedPoints[i].point
+			}
+		} else {
+			count--
+		}
+	}
+	return aim
 }
