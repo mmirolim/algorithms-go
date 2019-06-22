@@ -58,12 +58,10 @@ func qspartition(in *[]int) int {
 }
 
 func QuickSort(in *[]int) {
-	if len(*in) > 0 {
+	if len(*in) > 1 {
 		p := qspartition(in)
-		if p > 0 {
-			p1 := (*in)[:p-1]
-			QuickSort(&p1)
-		}
+		p1 := (*in)[:p]
+		QuickSort(&p1)
 		p2 := (*in)[p+1:]
 		QuickSort(&p2)
 	}
