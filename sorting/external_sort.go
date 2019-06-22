@@ -45,17 +45,13 @@ func GenerateFileWithRandomNumbers(n int, name string) error {
 // does not load the whole file into RAM, sortes in chunks (bytes) and using temp files
 // returns name of the sorted file
 func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
-	// tempDir, err := ioutil.TempDir("", fname)
-	// if err != nil {
-	// 	return
-	// }
-	tempDir := os.TempDir() + "/" + fname
-	os.RemoveAll(tempDir)
-	err = os.Mkdir(tempDir, 0777)
+	tempDir, err := ioutil.TempDir("", fname)
 	if err != nil {
 		return
 	}
-	fmt.Printf("TempDir %+v\n", tempDir) // output for debug
+	defer func() {
+		os.RemoveAll(tempDir)
+	}()
 	fnameSorted = fname + "_sorted"
 	f, err := os.Open(fname)
 	if err != nil {
@@ -87,7 +83,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 	}
 	writeToTempFile := func(chunkNum int, chunk []int64, howManyNumToWrite int) error {
 		name := pathTo(strconv.Itoa(chunkNum))
-		fmt.Printf("writeToTempFile name %+v\n", name) // output for debug
 		f, err := os.Create(name)
 		if err != nil {
 			return err
@@ -102,7 +97,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 	// read, sort and save chunks
 	rd := bufio.NewReader(f)
 	count := 0
-	printMemUsage("Mem before read loop")
 	readNumbers := 0
 	var errReadChunk error
 	for errReadChunk == nil {
@@ -120,7 +114,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 		sort(chunkBuf)
 		count++
 		err = writeToTempFile(count, chunkBuf, readNumbers)
-		printMemUsage("Mem after read loop iteration")
 		if err != nil {
 			return
 		}
@@ -135,7 +128,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 			return e2
 		}
 		mfname := pathTo("merge_iter_" + suffix)
-		fmt.Printf("Merged file name %+v\n", mfname) // output for debug
 		f, err := os.Create(mfname)
 		if err != nil {
 			return err
@@ -251,7 +243,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 			err = os.Remove(pathTo(files[i].Name()))
 			err = os.Remove(pathTo(files[i+1].Name()))
 		}
-		printMemUsage("Mem after mergeFiles loop iteration")
 		files, err = ioutil.ReadDir(tempDir)
 		if err != nil {
 			return
@@ -266,7 +257,6 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 		return
 	}
 	io.Copy(w, r)
-	printMemUsage("Mem before return")
 
 	return
 }
