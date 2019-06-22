@@ -104,14 +104,19 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 	count := 0
 	printMemUsage("Mem before read loop")
 	readNumbers := 0
-	for {
-		readNumbers, err = readChunk(rd, chunkBuf)
-		if err != nil {
-			if err == io.EOF {
+	var errReadChunk error
+	for errReadChunk == nil {
+		readNumbers, errReadChunk = readChunk(rd, chunkBuf)
+		if errReadChunk != nil {
+			if errReadChunk != io.EOF {
+				return
+			} else if readNumbers == 0 {
+				// EOF but no data read
 				break
 			}
-			return
+			// write remaining data on EOF
 		}
+
 		sort(chunkBuf)
 		count++
 		err = writeToTempFile(count, chunkBuf, readNumbers)

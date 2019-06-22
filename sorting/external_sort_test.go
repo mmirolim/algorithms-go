@@ -9,16 +9,19 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestGenerateFileWithRandomNumbers(t *testing.T) {
-	fname := "1e3"
-	var lines int = 1e3
+	start := time.Now()
+	fname := "1e4"
+	var lines int = 1e4
 	err := GenerateFileWithRandomNumbers(lines, fname)
 	if err != nil {
 		t.Errorf("unexpected error %+v", err)
 		t.FailNow()
 	}
+	fmt.Printf("Time spent on GenerateFileWithRandomNumbers %+v\n", time.Since(start)) // output for debug
 
 	f, err := os.Open(fname)
 	if err != nil {
@@ -44,43 +47,61 @@ func TestGenerateFileWithRandomNumbers(t *testing.T) {
 		t.Errorf("expected lines number in %v, equal to %v, got %v", fname, lines, count)
 	}
 }
+
 func TestExternalSort(t *testing.T) {
-	fname := "1e5"
-	var lines int = 1e5
-	err := GenerateFileWithRandomNumbers(lines, fname)
-	if err != nil {
-		t.Errorf("unexpected error %+v", err)
-		t.FailNow()
+	data := []struct {
+		fname    string
+		lines    int
+		chunkSze int
+	}{
+		{"1e4", 1e4, 3001},
+		{"1e4", 1e4, 777},
+		{"1e4", 1e4, 1e3},
+		{"1e5", 1e5, 1e4},
 	}
-	fnameSorted, err := ExternalSort(fname, 1e4)
-	if err != nil {
-		t.Errorf("unexpected error %+v", err)
-		t.FailNow()
-	}
-	f, err := os.Open(fnameSorted)
-	buf := bufio.NewReader(f)
-	prev := -math.MaxInt64
-	count := 0
-	for {
-		data, err := buf.ReadBytes('\n')
+	for i, d := range data {
+		fname := d.fname
+		lines := d.lines
+		start := time.Now()
+		err := GenerateFileWithRandomNumbers(lines, fname)
 		if err != nil {
-			break
-		}
-		count++
-		n, err := strconv.Atoi(string(data[:len(data)-1]))
-		if err != nil {
-			t.Errorf("unexpected value %+v, expected int, err %v", string(data), err)
+			t.Errorf("case [%v] unexpected error %+v", i, err)
 			t.FailNow()
 		}
-		if prev <= n {
-			prev = n
-		} else {
-			t.Errorf("expected sorted sequence got prev %v, next %v", prev, n)
+		fmt.Printf("Time spent on GenerateRandomNumbers %+v\n", time.Since(start)) // output for debug
+		start = time.Now()
+		fnameSorted, err := ExternalSort(fname, d.chunkSze)
+		if err != nil {
+			t.Errorf("case [%v] unexpected error %+v", i, err)
 			t.FailNow()
 		}
-	}
-	if count != lines {
-		t.Errorf("expected lines number in %v, equal to %v, got %v", fnameSorted, lines, count)
+		fmt.Printf("Time spent on ExternalSort %+v\n", time.Since(start)) // output for debug
+
+		f, err := os.Open(fnameSorted)
+		buf := bufio.NewReader(f)
+		prev := -math.MaxInt64
+		count := 0
+		for {
+			data, err := buf.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+			count++
+			n, err := strconv.Atoi(string(data[:len(data)-1]))
+			if err != nil {
+				t.Errorf("case [%v] unexpected value %+v, expected int, err %v", i, string(data), err)
+				t.FailNow()
+			}
+			if prev <= n {
+				prev = n
+			} else {
+				t.Errorf("case [%v] expected sorted sequence got prev %v, next %v", i, prev, n)
+				t.FailNow()
+			}
+		}
+		if count != lines {
+			t.Errorf("case [%v] expected lines number in %v, equal to %v, got %v, chunk size %v", i, fnameSorted, lines, count, d.chunkSze)
+		}
 	}
 }
 
