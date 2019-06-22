@@ -49,14 +49,14 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 	if err != nil {
 		return
 	}
-	defer func() {
-		os.RemoveAll(tempDir)
-	}()
+	defer os.RemoveAll(tempDir)
+
 	fnameSorted = fname + "_sorted"
 	f, err := os.Open(fname)
 	if err != nil {
 		return
 	}
+	defer f.Close()
 	pathTo := func(fname string) string {
 		return tempDir + "/" + fname
 	}
@@ -105,7 +105,7 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 			if errReadChunk != io.EOF {
 				return
 			} else if readNumbers == 0 {
-				// EOF but no data read
+				// EOF but no data to write
 				break
 			}
 			// write remaining data on EOF
@@ -123,108 +123,78 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 		if e1 != nil {
 			return e1
 		}
+		defer fd1.Close()
 		fd2, e2 := os.Open(pathTo(f2.Name()))
 		if e2 != nil {
 			return e2
 		}
+		defer fd2.Close()
 		mfname := pathTo("merge_iter_" + suffix)
 		f, err := os.Create(mfname)
 		if err != nil {
 			return err
 		}
+		defer f.Close()
 		w := bufio.NewWriter(f)
-		rd1 := bufio.NewReader(fd1)
-		rd2 := bufio.NewReader(fd2)
-		var n1, n2 int64
-		var d1, d2 []byte
-		n1Written := false
-		// read both n1, n2 first
-		d1, e1 = rd1.ReadBytes('\n')
-		if e1 != nil {
-			return e1
-		}
-		n1, e1 = strconv.ParseInt(string(d1[:len(d1)-1]), 10, 64)
-		if e1 != nil {
-			return e1
-		}
-		d2, e2 = rd2.ReadBytes('\n')
-		if e2 != nil {
-			return e2
-		}
-		n2, e2 = strconv.ParseInt(string(d2[:len(d2)-1]), 10, 64)
-		if e2 != nil {
-			return e2
-		}
-		for {
-			if n1 <= n2 {
-				n1Written = true
-				w.WriteString(strconv.FormatInt(n1, 10))
-			} else {
-				n1Written = false
-				w.WriteString(strconv.FormatInt(n2, 10))
+		var readers [2]*bufio.Reader
+		var nums [2]int64
+		var bufs [2][]byte
+		for i, r := range []io.Reader{fd1, fd2} {
+			readers[i] = bufio.NewReader(r)
+			bufs[i], e1 = readers[i].ReadBytes('\n')
+			if e1 != nil {
+				return e1
 			}
-			w.WriteByte('\n')
+			nums[i], e1 = strconv.ParseInt(string(bufs[i][:len(bufs[i])-1]), 10, 64)
+			if e1 != nil {
+				return e1
+			}
+		}
 
-			// read from where it was written
-			if n1Written {
-				d1, e1 = rd1.ReadBytes('\n')
-				if e1 != nil {
-					if e1 == io.EOF {
-						break
-					}
-					return e1
-				}
-				n1, e1 = strconv.ParseInt(string(d1[:len(d1)-1]), 10, 64)
-				if e1 != nil {
-					return e1
-				}
+		which := 0
+		for {
+			if nums[0] <= nums[1] {
+				w.Write(bufs[0])
+				which = 0
 			} else {
-				d2, e2 = rd2.ReadBytes('\n')
-				if e2 != nil {
-					if e2 == io.EOF {
-						break
-					}
-					return e2
+				w.Write(bufs[1])
+				which = 1
+			}
+			bufs[which], e1 = readers[which].ReadBytes('\n')
+			if e1 != nil {
+				if e1 == io.EOF {
+					break
 				}
-				n2, e2 = strconv.ParseInt(string(d2[:len(d2)-1]), 10, 64)
-				if e2 != nil {
-					return e2
-				}
+				return e1
+			}
+			nums[which], e1 = strconv.ParseInt(string(bufs[which][:len(bufs[which])-1]), 10, 64)
+			if e1 != nil {
+				return e1
 			}
 		}
+		// write what left in buf
+		// which one returned error
+		if which == 1 {
+			w.Write(bufs[0])
+			which = 0
+		} else {
+			w.Write(bufs[1])
+			which = 1
+		}
+		// append remaining file
+		for {
+			bufs[which], e1 = readers[which].ReadBytes('\n')
+			if e1 != nil {
+				if e1 == io.EOF {
+					break
+				}
+				return e1
+			}
+			w.Write(bufs[which])
+		}
+
 		w.Flush()
-		// write rest of f1 or f2 to merged file
-		if e1 == nil {
-			// rd2 EOF, we have unprocessed d1 bytes stored
-			w.Write(d1)
-			for {
-				d1, e1 = rd1.ReadBytes('\n')
-				if e1 != nil {
-					if e1 == io.EOF {
-						break
-					}
-					return e1
-				}
-				w.Write(d1)
-			}
-		}
-		if e2 == nil {
-			// we didn't write d1, d2 yet after break first loop
-			w.Write(d1)
-			w.Write(d2)
-			for {
-				d2, e2 = rd2.ReadBytes('\n')
-				if e2 != nil {
-					if e2 == io.EOF {
-						break
-					}
-					return e2
-				}
-				w.Write(d2)
-			}
-		}
-		w.Flush()
-		return f.Close()
+		return nil
 	}
 	// merge in order chunks
 	files, err := ioutil.ReadDir(tempDir)
@@ -252,11 +222,12 @@ func ExternalSort(fname string, chunk int) (fnameSorted string, err error) {
 	if err != nil {
 		return
 	}
+	defer w.Close()
 	r, err := os.Open(pathTo(files[0].Name()))
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	io.Copy(w, r)
-
 	return
 }
