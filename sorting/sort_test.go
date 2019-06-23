@@ -84,8 +84,10 @@ func TestFindMaxWallIntersectAimPoint(t *testing.T) {
 	}
 }
 
+var randomArrSize int = 1e5
+
 func BenchmarkQuickSort(b *testing.B) {
-	arr := rand.Perm(1e6)
+	arr := rand.Perm(randomArrSize)
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -93,7 +95,7 @@ func BenchmarkQuickSort(b *testing.B) {
 	}
 }
 func BenchmarkMergeSort(b *testing.B) {
-	arr := rand.Perm(1e6)
+	arr := rand.Perm(randomArrSize)
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
@@ -102,10 +104,18 @@ func BenchmarkMergeSort(b *testing.B) {
 }
 
 func BenchmarkQuickSortConcurrent(b *testing.B) {
-	arr := rand.Perm(1e6)
+	arr := rand.Perm(randomArrSize)
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		_ = QuickSortConcurrent(arr)
+	}
+}
+func BenchmarkQuickSortConcurrentHeapMerge(b *testing.B) {
+	arr := rand.Perm(randomArrSize)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = QuickSortConcurrentHeapMerge(arr)
 	}
 }

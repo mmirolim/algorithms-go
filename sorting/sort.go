@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+
+	tree "github.com/mmirolim/algos/trees"
 )
 
 func merge(in1, in2 []int) []int {
@@ -102,6 +104,64 @@ func QuickSortConcurrent(in []int) []int {
 		out = out[2:]
 	}
 	return out[0]
+}
+
+func QuickSortConcurrentHeapMerge(in []int) []int {
+	var wg sync.WaitGroup
+	numcpu := runtime.NumCPU()
+	batch := len(in) / numcpu
+	if len(in)%numcpu != 0 {
+		batch++
+	}
+	out := make([][]int, numcpu, numcpu+1)
+	count := 0
+	for i := 0; i < numcpu; i++ {
+		if i*batch > len(in)-1 {
+			// skip redundant batches
+			continue
+		}
+		wg.Add(1)
+		count++
+		go func(i int) {
+			end := (i + 1) * batch
+			if end > len(in) {
+				end = len(in)
+			}
+			s := in[i*batch : end]
+			QuickSort(&s)
+			out[i] = s
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	// merge
+	res := make([]int, len(in))
+	heap, err := tree.NewMinHeap(numcpu)
+	if err != nil {
+		panic(err)
+	}
+	for i := 0; i < count; i++ {
+		err = heap.Insert(out[i][0], out[i])
+		if err != nil {
+			panic(err)
+		}
+	}
+	for i := 0; i < len(res); i++ {
+		v, data, err := heap.ExtractTop()
+		if err != nil {
+			panic(err)
+		}
+		res[i] = v
+		arr := data.([]int)
+		if len(arr) > 1 {
+			arr = arr[1:]
+			err = heap.Insert(arr[0], arr)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+	return res
 }
 
 type Point struct {
