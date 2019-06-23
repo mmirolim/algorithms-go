@@ -3,7 +3,9 @@ package sorting
 import (
 	"math"
 	"math/rand"
+	"runtime"
 	"sort"
+	"sync"
 )
 
 func merge(in1, in2 []int) []int {
@@ -65,6 +67,41 @@ func QuickSort(in *[]int) {
 		p2 := (*in)[p+1:]
 		QuickSort(&p2)
 	}
+}
+
+func QuickSortConcurrent(in []int) []int {
+	var wg sync.WaitGroup
+	numcpu := runtime.NumCPU()
+	batch := len(in) / numcpu
+	if len(in)%numcpu != 0 {
+		batch++
+	}
+	out := make([][]int, numcpu, numcpu+1)
+	for i := 0; i < numcpu; i++ {
+		if i*batch > len(in)-1 {
+			// skip redundant batches
+			continue
+		}
+		wg.Add(1)
+		go func(i int) {
+			end := (i + 1) * batch
+			if end > len(in) {
+				end = len(in)
+			}
+			s := in[i*batch : end]
+			QuickSort(&s)
+			out[i] = s
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	// merge
+	for len(out) > 1 {
+		o := merge(out[0], out[1])
+		out = append(out, o)
+		out = out[2:]
+	}
+	return out[0]
 }
 
 type Point struct {
