@@ -238,3 +238,56 @@ func FindMaxWallIntersectAimPoint(points []Point, q Point) Point {
 	}
 	return aim
 }
+
+func SortStacksOfFlapjacks(stack []int) []int {
+	var flips []int
+	// check initial order
+	prev := stack[0]
+	for i := 1; i < len(stack); i++ {
+		if prev > stack[i] {
+			break
+		}
+		prev = stack[i]
+	}
+	// already sorted
+	if prev == stack[len(stack)-1] {
+		return flips
+	}
+	// else
+	findMax := func(btm int) int {
+		max := -(math.MaxInt64 - 1)
+		id := 0
+		for i := 0; i <= btm; i++ {
+			if max < stack[i] {
+				max = stack[i]
+				id = i
+			}
+		}
+		return id
+	}
+
+	addFlip := func(id int) {
+		flips = append(flips, len(stack)-id)
+	}
+
+	flip := func(id int) {
+		for i := 0; i <= id/2; i++ {
+			stack[i], stack[id-i] = stack[id-i], stack[i]
+		}
+		addFlip(id)
+	}
+
+	bottom := len(stack) - 1
+	for bottom != 0 {
+		idx := findMax(bottom)
+		if idx == bottom {
+			bottom--
+		} else if idx == 0 {
+			flip(bottom)
+		} else {
+			flip(idx)
+		}
+	}
+	return flips
+
+}

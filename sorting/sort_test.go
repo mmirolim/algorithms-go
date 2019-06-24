@@ -84,6 +84,32 @@ func TestFindMaxWallIntersectAimPoint(t *testing.T) {
 	}
 }
 
+func TestSortStacksOfFlapjacks(t *testing.T) {
+	data := []struct {
+		stack      []int
+		flipsOrder []int
+	}{
+		{[]int{1, 2, 3, 4, 5}, nil},
+		{[]int{5, 4, 3, 2, 1}, []int{1}},
+		{[]int{5, 1, 2, 3, 4}, []int{1, 2}},
+		{[]int{3, 4, 5, 2, 1}, []int{3, 1}},
+		{[]int{3, 5, 4, 1, 2}, []int{4, 1, 3, 2, 3}},
+	}
+	for i, d := range data {
+		flips := SortStacksOfFlapjacks(d.stack)
+		if len(flips) != len(d.flipsOrder) {
+			t.Errorf("case [%v] expected order %v, got %v", i, d.flipsOrder, flips)
+			continue
+		}
+		for j, v := range flips {
+			if v != d.flipsOrder[j] {
+				t.Errorf("case [%v] expected order %v, got %v", i, d.flipsOrder, flips)
+				break
+			}
+		}
+	}
+}
+
 var randomArrSize int = 1e5
 
 func BenchmarkQuickSort(b *testing.B) {
