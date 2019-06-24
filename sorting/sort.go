@@ -239,6 +239,9 @@ func FindMaxWallIntersectAimPoint(points []Point, q Point) Point {
 	return aim
 }
 
+// PC 4.6.2
+// Stacks of Flapjacks
+// PC/UVa IDs: 110402/120, Popularity: B, Success rate: high Level: 2
 func SortStacksOfFlapjacks(stack []int) []int {
 	var flips []int
 	// check initial order
@@ -290,4 +293,26 @@ func SortStacksOfFlapjacks(stack []int) []int {
 	}
 	return flips
 
+}
+
+// PC 4.6.7
+// ShellSort
+// PC/UVa IDs: 110407/10152, Popularity: B, Success rate: average Level: 2
+func ShellSortProblem(initSeq, finalSeq []string) []string {
+	var ops []string
+	orderingId := make(map[string]int, len(initSeq))
+	for i := range initSeq {
+		orderingId[initSeq[i]] = i
+	}
+
+	for i := len(finalSeq) - 2; i >= 0; i-- {
+		if orderingId[finalSeq[i]] > orderingId[finalSeq[i+1]] {
+			for j := i; j >= 0; j-- {
+				ops = append(ops, finalSeq[j])
+			}
+			break
+		}
+	}
+
+	return ops
 }

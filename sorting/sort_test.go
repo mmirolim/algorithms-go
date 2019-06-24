@@ -110,6 +110,34 @@ func TestSortStacksOfFlapjacks(t *testing.T) {
 	}
 }
 
+func TestShellSortProblem(t *testing.T) {
+	data := []struct {
+		initSeq  []string
+		finalSeq []string
+		ops      []string
+	}{
+		{[]string{"A", "B", "C"}, []string{"C", "A", "B"}, []string{"C"}},
+		{[]string{"A", "B", "C", "D"}, []string{"A", "C", "D", "B"}, []string{"D", "C", "A"}},
+		{[]string{"A", "B", "C", "D", "E", "F", "G", "H", "I"}, []string{"A", "F", "C", "B", "D", "E", "G", "H", "I"}, []string{"C", "F", "A"}},
+		{[]string{"A", "B", "C", "D", "E", "F"}, []string{"A", "E", "C", "B", "F", "D"}, []string{"F", "B", "C", "E", "A"}},
+	}
+
+	for i, d := range data {
+		ops := ShellSortProblem(d.initSeq, d.finalSeq)
+		if len(ops) != len(d.ops) {
+			t.Errorf("case [%v] expected order %v, got %v", i, d.ops, ops)
+			continue
+		}
+		for j, v := range ops {
+			if v != d.ops[j] {
+				t.Errorf("case [%v] expected order %v, got %v", i, d.ops, ops)
+				break
+			}
+		}
+
+	}
+}
+
 var randomArrSize int = 1e5
 
 func BenchmarkQuickSort(b *testing.B) {
