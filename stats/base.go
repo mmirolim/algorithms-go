@@ -5,6 +5,9 @@ import (
 	"sort"
 )
 
+var sqrt2Pi = math.Sqrt(2 * math.Pi)
+var sqrtPi = math.Sqrt(math.Pi)
+
 func FindQuartiles(nums []int) (q1, q2, q3 float64) {
 	sort.Ints(nums)
 	medID := len(nums) / 2
@@ -129,4 +132,53 @@ func Factorial(n int) int {
 		r *= i
 	}
 	return r
+}
+
+func PoissonDistribution(lambda float64, k int) float64 {
+	return math.Pow(lambda, float64(k)) * math.Exp(-lambda) / float64(Factorial(k))
+}
+
+// Expectation of X^2
+func PoissonDistributionEX2(x float64) float64 {
+	return x + x*x
+}
+
+// u = 0, sd = 1
+func StandardNormalDistribution(x float64) float64 {
+	return math.Exp(-(x*x)/2) / sqrt2Pi
+}
+
+func NormalDistribution(x, u, variance float64) float64 {
+	return (1 / variance) * StandardNormalDistribution((x-u)/variance)
+}
+
+func CumulativeDistributionFunctionOfNormalDistribution(x, u, sd float64) float64 {
+	return 0.5 * (1 + Erf((x-u)/(sd*math.Sqrt2)))
+}
+
+// Erf fn approximation with elementary functions, maximum error: 1.5×10−7
+// https://en.wikipedia.org/wiki/Error_function
+// Another approximation which can be used is given by Sergei Winitzki
+// using his "global Padé approximations"
+func Erf(x float64) float64 {
+	// constants
+	a1 := 0.254829592
+	a2 := -0.284496736
+	a3 := 1.421413741
+	a4 := -1.453152027
+	a5 := 1.061405429
+	p := 0.3275911
+
+	// Save the sign of x
+	sign := 1
+	if x < 0 {
+		sign = -1
+	}
+	x = math.Abs(x)
+
+	// A&S formula 7.1.26
+	t := 1.0 / (1.0 + p*x)
+	y := 1.0 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*math.Exp(-x*x)
+
+	return float64(sign) * y
 }

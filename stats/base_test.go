@@ -124,3 +124,94 @@ func TestBinomialDistribution(t *testing.T) {
 	}
 
 }
+
+// https://www.hackerrank.com/challenges/s10-binomial-distribution-1/problem
+func TestBinomialDistributionAtLeast3BoysOutOf6Children(t *testing.T) {
+	/*	Task
+		The ratio of boys to girls for babies born in Russia is 1.09:1. If there is  child born per birth, what proportion of Russian families with exactly 6 children will have at least 3 boys?
+
+		Write a program to compute the answer using the above parameters. Then print your result, rounded to a scale of 3 decimal places (i.e., 1.234 format).
+	*/
+	n, p, x := 6, 1.09/2.09, 3
+	expectedResult := 0.696
+	res := 0.0
+	for i := x; i <= n; i++ {
+		res += BinomialDistribution(i, n, p)
+	}
+	if fmt.Sprintf("%0.3f", res) != fmt.Sprintf("%0.3f", expectedResult) {
+		t.Errorf("expected %v, got %v", expectedResult, res)
+	}
+}
+
+// https://www.hackerrank.com/challenges/s10-geometric-distribution-2/problem
+func TestGeometricDistributionWhatProbToFindDefectDuringFirstNInspections(t *testing.T) {
+	/*
+	   Task
+	   The probability that a machine produces a defective product is 1/3. What is the probability that the 1th defect is found during the first 5 inspections?
+	*/
+	p := 1.0 / 3
+	n := 5
+	expectedResult := 0.868
+	res := 0.0
+	for i := 1; i <= n; i++ {
+		res += GeometricDistribution(i, p)
+	}
+	if fmt.Sprintf("%0.3f", res) != fmt.Sprintf("%0.3f", expectedResult) {
+		t.Errorf("expected %v, got %v", expectedResult, res)
+	}
+}
+
+// https://www.hackerrank.com/challenges/s10-poisson-distribution-1/problem
+func TestPoissonDistribution(t *testing.T) {
+	/*
+		Task
+		A random variable, X, follows Poisson distribution with mean of 2.5.
+		Find the probability with which the random variable X is equal to 5.
+	*/
+
+	X := 2.5
+	K := 5
+	expectedResult := 0.067
+	res := PoissonDistribution(X, K)
+	if fmt.Sprintf("%0.3f", res) != fmt.Sprintf("%0.3f", expectedResult) {
+		t.Errorf("expected %v, got %v", expectedResult, res)
+	}
+
+}
+
+// https://www.hackerrank.com/challenges/s10-normal-distribution-2/problem
+func TestNormalDistributionWhatPercentageOfTheStudentsWithXGrade(t *testing.T) {
+	/*
+			Task
+			The final grades for a Physics exam taken by a large group of students
+			have a mean of 70 and a standard deviation of 10.
+			If we can approximate the distribution of these grades by
+			a normal distribution, what percentage of the students:
+		        Scored higher than 80 (i.e., have a grade > 80)?
+			Passed the test (i.e., have a grade => 60)?
+			Failed the test (i.e., have a grade < 60)?
+			Find and print the answer to each question on a new line,
+			rounded to a scale of 2 decimal places.
+	*/
+	mean := 70.0
+	sd := 10.0
+	m80 := 80.0
+	p60 := 60.0
+	f60 := 60.0
+	expectedQ1Res := 15.87
+	expectedQ2Res := 84.13
+	expectedQ3Res := 15.87
+	res := 100 * (1 - CumulativeDistributionFunctionOfNormalDistribution(m80, mean, sd))
+	if fmt.Sprintf("%0.2f", res) != fmt.Sprintf("%0.2f", expectedQ1Res) {
+		t.Errorf("expected %v, got %v", expectedQ1Res, res)
+	}
+	res = 100 * (1 - CumulativeDistributionFunctionOfNormalDistribution(p60, mean, sd))
+	if fmt.Sprintf("%0.2f", res) != fmt.Sprintf("%0.2f", expectedQ2Res) {
+		t.Errorf("expected %v, got %v", expectedQ2Res, res)
+	}
+	res = 100 * CumulativeDistributionFunctionOfNormalDistribution(f60, mean, sd)
+	if fmt.Sprintf("%0.2f", res) != fmt.Sprintf("%0.2f", expectedQ3Res) {
+		t.Errorf("expected %v, got %v", expectedQ3Res, res)
+	}
+
+}
