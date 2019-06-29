@@ -182,3 +182,47 @@ func Erf(x float64) float64 {
 
 	return float64(sign) * y
 }
+
+func Covariance(X, Y []float64) float64 {
+	if len(X) != len(Y) {
+		panic("X and Y number of values different")
+	}
+	xm := Mean(X)
+	ym := Mean(Y)
+	cov := 0.0
+	for i := range X {
+		cov += (X[i] - xm) * (Y[i] - ym)
+	}
+	return cov / float64(len(X))
+}
+
+func PearsonCorrelationCoefficient(X, Y []float64) float64 {
+	return Covariance(X, Y) / (StandardDeviation(X) * StandardDeviation(Y))
+}
+
+func SpearmansRankCorrelationCoefficient(X, Y []float64) float64 {
+	rankx := deriveRank(X)
+	ranky := deriveRank(Y)
+	return PearsonCorrelationCoefficient(rankx, ranky)
+}
+
+func deriveRank(X []float64) []float64 {
+	rankx := make([]float64, len(X))
+	index := map[float64]int{}
+	for i := range X {
+		index[X[i]] = i
+	}
+	sorted := make([]float64, 0, len(index))
+	for k := range index {
+		sorted = append(sorted, k)
+	}
+	sort.Float64s(sorted)
+	for i := range sorted {
+		// rank
+		index[sorted[i]] = i + 1
+	}
+	for i := range X {
+		rankx[i] = float64(index[X[i]])
+	}
+	return rankx
+}

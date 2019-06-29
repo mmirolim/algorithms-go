@@ -2,6 +2,7 @@ package stats
 
 import (
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -214,4 +215,42 @@ func TestNormalDistributionWhatPercentageOfTheStudentsWithXGrade(t *testing.T) {
 		t.Errorf("expected %v, got %v", expectedQ3Res, res)
 	}
 
+}
+
+func TestCentralLimitTheorem(t *testing.T) {
+	// https://www.hackerrank.com/challenges/s10-the-central-limit-theorem-1/problem
+	// elevator can transport a max weightww
+	mw := 9800.0
+	n := 49.0
+	u := 205.0
+	sd := 15.0
+	expectedResult := 0.0098
+	// Question is :  what is the probability that all
+	// boxes can be safely loaded into the freight elevator and transported?
+	res := CumulativeDistributionFunctionOfNormalDistribution(mw, n*u, sd*math.Sqrt(n))
+	if fmt.Sprintf("%0.4f", res) != fmt.Sprintf("%0.4f", expectedResult) {
+		t.Errorf("expected %v, got %v", expectedResult, res)
+	}
+
+	// https://www.hackerrank.com/challenges/s10-the-central-limit-theorem-2/problem
+	nt := 250.0
+	ns := 100.0
+	u = 2.4
+	sd = 2.0
+	expectedResult = 0.6915
+	res = CumulativeDistributionFunctionOfNormalDistribution(nt, ns*u, sd*math.Sqrt(ns))
+	if fmt.Sprintf("%0.4f", res) != fmt.Sprintf("%0.4f", expectedResult) {
+		t.Errorf("expected %v, got %v", expectedResult, res)
+	}
+}
+
+func TestSpearmansRankCorrelationCoefficient(t *testing.T) {
+	X := []float64{0.2, 1.3, 0.2, 1.1, 1.4, 1.5}
+	Y := []float64{1.9, 2.2, 3.1, 1.2, 2.2, 2.2}
+
+	rs := 0.158114
+	res := SpearmansRankCorrelationCoefficient(X, Y)
+	if fmt.Sprintf("%0.3f", rs) != fmt.Sprintf("%0.3f", res) {
+		t.Errorf("expected %v, got %v", rs, res)
+	}
 }
