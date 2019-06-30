@@ -2,19 +2,9 @@ package tree
 
 import (
 	"testing"
+
+	"github.com/mmirolim/algos/checks"
 )
-
-func neqErrs(e1, e2 error) bool {
-	if e1 == e2 {
-		return false
-	}
-
-	if e1 != nil && e2 != nil && e1.Error() == e2.Error() {
-		return false
-	}
-
-	return true
-}
 
 func TestNewHeap(t *testing.T) {
 	data := []struct {
@@ -33,7 +23,7 @@ func TestNewHeap(t *testing.T) {
 	}
 	for i, d := range data {
 		h, err := NewMinHeap(d.size)
-		if neqErrs(d.err, err) {
+		if checks.NeqErrs(d.err, err) {
 			t.Errorf("case [%v] expected err %v, got %v", i, d.err, err)
 			continue
 		}
@@ -45,7 +35,7 @@ func TestNewHeap(t *testing.T) {
 		}
 
 		h, err = NewMaxHeap(d.size)
-		if neqErrs(d.err, err) {
+		if checks.NeqErrs(d.err, err) {
 			t.Errorf("case [%v] expected err %v, got %v", i, d.err, err)
 			continue
 		}
