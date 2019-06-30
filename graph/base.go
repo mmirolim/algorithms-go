@@ -1,10 +1,17 @@
 package graph
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
+)
+
+var (
+	ErrWrongNumOfVertices = errors.New("err wrong number of vertices")
+	ErrWeightMissing      = errors.New("err weight missing")
+	ErrWrongNumOfEdges    = errors.New("err wrong number of edges")
 )
 
 type Graph struct {
@@ -52,6 +59,8 @@ func NewGraphFrom(txt string) (*Graph, error) {
 		}
 	}
 
+	// store all seen vertices
+	seenVertices := map[int]bool{}
 	// read edges
 	for err == nil {
 		line, err = readLine(r)
@@ -62,13 +71,50 @@ func NewGraphFrom(txt string) (*Graph, error) {
 				break
 			}
 		}
-		err = g.edgeFromString(line)
+		err = g.edgeFromString(line, seenVertices)
 		if err != nil {
 			return nil, err
 		}
 	}
-
+	err = checkNumOfVertices(g.numOfVertices, seenVertices)
+	if err != nil {
+		return nil, err
+	}
+	err = g.checkNumOfEdges()
+	if err != nil {
+		return nil, err
+	}
 	return g, nil
+}
+func (g *Graph) checkNumOfEdges() error {
+	for i := range g.edges {
+		if g.edges[i] != nil {
+			g.degree[i] = g.edges[i].len
+		}
+	}
+	edges := g.Edges()
+	if len(edges) != g.numOfEdges {
+		return ErrWrongNumOfEdges
+	}
+	return nil
+}
+func checkNumOfVertices(numOfVertices int, seenVertices map[int]bool) error {
+	if len(seenVertices) != numOfVertices {
+		return ErrWrongNumOfVertices
+	}
+	min, max := 1<<30, -(1 << 30)
+	for k := range seenVertices {
+		if k < min {
+			min = k
+		}
+		if k > max {
+			max = k
+		}
+	}
+	if min != 1 || max != numOfVertices {
+		return ErrWrongNumOfVertices
+	}
+	return nil
 }
 
 func (g *Graph) graphCfgFromString(line string) error {
@@ -110,19 +156,27 @@ func (g *Graph) codeFromString(line string) error {
 	return nil
 }
 
-func (g *Graph) edgeFromString(line string) error {
+func (g *Graph) edgeFromString(line string, seenVertices map[int]bool) error {
 	var v1, v2, w int
 	var err error
 	if strings.Count(line, " ") == 0 {
 		// single degree vertex
+		fmt.Sscanf(line, "%d\n", &v1)
+		seenVertices[v1] = true
 		return nil
 	}
 	if g.isWeighted {
 		_, err = fmt.Sscanf(line, "%d %d %d\n", &v1, &v2, &w)
+		// if got unexpected EOF must be weight missing
+		if err == io.EOF {
+			return ErrWeightMissing
+		}
+
 	} else {
 		_, err = fmt.Sscanf(line, "%d %d\n", &v1, &v2)
 		w = 0
 	}
+	seenVertices[v1], seenVertices[v2] = true, true
 	if err != nil {
 		if err != io.EOF {
 			return err
@@ -268,7 +322,9 @@ func (g *Graph) ToString() string {
 type list struct {
 	len  int
 	head *node
+	last *node
 }
+
 type node struct {
 	id   int
 	val  int
@@ -280,9 +336,23 @@ func newNode(id, val int) *node {
 }
 
 func newList(n *node) *list {
-	return &list{0, n}
+	if n != nil {
+		return &list{1, n, n}
+	}
+	return &list{0, nil, nil}
 }
 
+// const time
+func (l *list) prepend(n *node) {
+	if n == nil {
+		return
+	}
+	l.len++
+	n.next = l.head
+	l.head = n
+}
+
+// const time
 func (l *list) append(n *node) {
 	if n == nil {
 		return
@@ -290,13 +360,11 @@ func (l *list) append(n *node) {
 	l.len++
 	if l.head == nil {
 		l.head = n
+		l.last = n
 		return
 	}
-	current := l.head
-	for current.next != nil {
-		current = current.next
-	}
-	current.next = n
+	l.last.next = n
+	l.last = n
 }
 
 func (l *list) find(id int) *node {
@@ -346,7 +414,6 @@ func (l *list) ToString() string {
 	if l.head == nil {
 		return ""
 	}
-	// TODO use arrow in directed edges
 	str.WriteString("-")
 	current := l.head
 	for {
@@ -370,7 +437,7 @@ func readLine(r io.Reader) (string, error) {
 	for {
 		_, err := r.Read(b)
 		if err != nil {
-			return "", err
+			return string(line), err
 		}
 		if b[0] == '\n' {
 			break

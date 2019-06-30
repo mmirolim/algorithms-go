@@ -93,7 +93,7 @@ func TestNewGraphFrom(t *testing.T) {
 		g, err := NewGraphFrom(d.text)
 		if checks.NeqErrs(err, d.expectedErr) {
 			t.Errorf("case [%v] expected err %v, got err %v",
-				i, err, d.expectedErr)
+				i, d.expectedErr, err)
 			continue
 		}
 		vertices := g.Vertices()
@@ -137,6 +137,57 @@ func TestNewGraphFrom(t *testing.T) {
 					i, j, d.edgesWithWeights, edges)
 				break
 			}
+		}
+	}
+}
+func TestNewGraphFromConsistencyCheck(t *testing.T) {
+	wrongNumOfCodes := `5 4 directed weighted hascodes
+2  Hillary Clinton
+3  John McCain
+4  George Bush
+5  Saddam Hussein
+1 2 10
+1 3 2
+2 3 5
+3 4 4
+4
+5
+`
+	wrongNumOfVertices := `5 4
+1 2
+1 3
+2 3
+3 4`
+	weightMissing := `5 4 directed weighted hascodes
+1  Bill Clinton
+2  Hillary Clinton
+3  John McCain
+4  George Bush
+5  Saddam Hussein
+1 2 10
+1 3 2
+2 3
+3 4 4
+4
+5`
+	wrongNumOfEdges := `5 4
+1 2
+2 3
+3 4
+5`
+	data := []struct {
+		wrongData   string
+		expectedErr error
+	}{
+		{wrongNumOfCodes, ErrWrongNumOfEdges},
+		{wrongNumOfVertices, ErrWrongNumOfVertices},
+		{weightMissing, ErrWeightMissing},
+		{wrongNumOfEdges, ErrWrongNumOfEdges},
+	}
+	for i, d := range data {
+		_, err := NewGraphFrom(d.wrongData)
+		if checks.NeqErrs(err, d.expectedErr) {
+			t.Errorf("case [%v] expected err %v, got %v", i, d.expectedErr, err)
 		}
 	}
 }
