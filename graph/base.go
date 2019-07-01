@@ -372,7 +372,7 @@ func (l *list) find(id int) *node {
 		return nil
 	}
 	current := l.head
-	for current.next != nil {
+	for current != nil {
 		if current.id == id {
 			return current
 		}
