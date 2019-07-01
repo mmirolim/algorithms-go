@@ -38,7 +38,7 @@ type SvgCircle struct {
 
 func NewDefSvgCircle(id string, x, y, r int, fill string) SvgCircle {
 	return SvgCircle{
-		id:     id + circleIDSuffix(),
+		id:     id,
 		x:      x,
 		y:      y,
 		r:      r,
@@ -47,7 +47,7 @@ func NewDefSvgCircle(id string, x, y, r int, fill string) SvgCircle {
 	}
 }
 func (c *SvgCircle) serialize() string {
-	return fmt.Sprintf("<circle cx=\"%d\" cy=\"%d\" r=\"%d\" fill=\"%s\" stroke=\"%s\" stroke-width=\"1\"></circle>", c.x, c.y, c.r, c.fill, c.stroke)
+	return fmt.Sprintf("<circle id=\"%s\" cx=\"%d\" cy=\"%d\" r=\"%d\" fill=\"%s\" stroke=\"%s\" stroke-width=\"1\"></circle>", c.id, c.x, c.y, c.r, c.fill, c.stroke)
 }
 
 type GroupCircles struct {
@@ -61,12 +61,12 @@ type SvgLine struct {
 }
 
 func (l *SvgLine) serialize() string {
-	return fmt.Sprintf("<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"%s\"></line>",
-		l.x1, l.y1, l.x2, l.y2, l.stroke)
+	return fmt.Sprintf("<line id=\"%s\" x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke=\"%s\"></line>",
+		l.id, l.x1, l.y1, l.x2, l.y2, l.stroke)
 }
 func NewDefSvgLine(id string, x1, y1, x2, y2 int) SvgLine {
 	return SvgLine{
-		id:     id + lineIDSuffix(),
+		id:     id,
 		x1:     x1,
 		y1:     y1,
 		x2:     x2,
@@ -90,7 +90,7 @@ type SvgText struct {
 
 func NewSvgText(id string, x, y, fontSize int, text, fill, textAnchor string) SvgText {
 	return SvgText{
-		id:         id + textIDSuffix(),
+		id:         id,
 		x:          x,
 		y:          y,
 		fontSize:   fontSize,
@@ -101,13 +101,13 @@ func NewSvgText(id string, x, y, fontSize int, text, fill, textAnchor string) Sv
 }
 
 func (t *SvgText) serialize() string {
-	return fmt.Sprintf("<text x=\"%d\" y=\"%d\" font-size=\"%d\" fill=\"%s\" text-anchor=\"%s\">%s</text>",
-		t.x, t.y, t.fontSize, t.fill, t.textAnchor, t.text)
+	return fmt.Sprintf("<text id=\"%s\" x=\"%d\" y=\"%d\" font-size=\"%d\" fill=\"%s\" text-anchor=\"%s\">%s</text>",
+		t.id, t.x, t.y, t.fontSize, t.fill, t.textAnchor, t.text)
 }
 
 func NewDefSvgText(id string, x, y int, text string) SvgText {
 	return SvgText{
-		id:         id + textIDSuffix(),
+		id:         id,
 		x:          x,
 		y:          y,
 		text:       text,
@@ -237,7 +237,29 @@ func (s *SVG) readGraph() error {
 		t.x, t.y = c.x, c.y
 		s.GTexts[tid] = t
 	}
+	// position weights
+	for _, l := range s.GLines {
+		x, y := middlePoint(l.x1, l.y1, l.x2, l.y2)
+		v1, v2 := lineVsID(l.id)
+		vertex2 := s.g.edges[v1].find(v2)
+		if vertex2 == nil {
+			continue
+		}
+		if vertex2.val > 0 {
+			id := weightID(v1, v2)
+			t := NewDefSvgText(id, x, y, strconv.Itoa(vertex2.val))
+			t.fontSize = 20
+			s.GTexts[id] = t
+		}
+	}
 	return nil
+}
+func weightID(v1, v2 int) string {
+	return strconv.Itoa(v1) + "-" + strconv.Itoa(v2) + "#weight"
+}
+
+func middlePoint(x1, y1, x2, y2 int) (x, y int) {
+	return x1 - (x1-x2)/2, y1 - (y1-y2)/2
 }
 func idAtoi(id string) int {
 	ind := strings.IndexByte(id, '#')
@@ -272,29 +294,51 @@ func (s *SVG) vertexToCircleWithText(
 	x, y, r int,
 	fill string,
 ) (SvgCircle, SvgText) {
-	idStr := strconv.Itoa(id)
-	c := NewDefSvgCircle(idStr, x, y, r, fill)
+	c := NewDefSvgCircle(circleID(id), x, y, r, fill)
 	if label == "" {
 		label = strconv.Itoa(id)
 	}
-	txt := NewDefSvgText(idStr, x, y, label)
+	txt := NewDefSvgText(textID(id), x, y, label)
 	return c, txt
 }
 
-// TODO add weight support
+func lineID(v1, v2 int) string {
+	return strconv.Itoa(v1) + "-" + strconv.Itoa(v2) + lineIDSuffix()
+}
+func lineVsID(id string) (v1, v2 int) {
+	var e error
+	ind := strings.IndexByte(id, '#')
+	id = id[:ind]
+	ind = strings.IndexByte(id, '-')
+	v1, e = strconv.Atoi(id[:ind])
+	if e != nil {
+		panic(e)
+	}
+	v2, e = strconv.Atoi(id[ind+1:])
+	if e != nil {
+		panic(e)
+	}
+	return
+}
+
+func circleID(v int) string {
+	return strconv.Itoa(v) + circleIDSuffix()
+}
+
+func textID(id int) string {
+	return strconv.Itoa(id) + textIDSuffix()
+}
+
 func (s *SVG) edgeToLine(v1, v2 int) (SvgLine, error) {
-	v1Str := strconv.Itoa(v1)
-	v2Str := strconv.Itoa(v2)
-	idStr := v1Str + v2Str
-	n1, ok := s.GCircles[v1Str+circleIDSuffix()]
+	n1, ok := s.GCircles[circleID(v1)]
 	if !ok {
 		return SvgLine{}, ErrSVGNodeNotFound
 	}
-	n2, ok := s.GCircles[v2Str+circleIDSuffix()]
+	n2, ok := s.GCircles[circleID(v2)]
 	if !ok {
 		return SvgLine{}, ErrSVGNodeNotFound
 	}
-	l := NewDefSvgLine(idStr, n1.x, n1.y, n2.x, n2.y)
+	l := NewDefSvgLine(lineID(v1, v2), n1.x, n1.y, n2.x, n2.y)
 	return l, nil
 }
 
@@ -333,7 +377,6 @@ func pushForceDislocation(c1, c2 *SvgCircle, c1Degree int, connected bool) (bool
 	x1, y1, x2, y2 := c1.x, c1.y, c2.x, c2.y
 	k := float64(y1-y2) / float64(x1-x2)
 	f := pushForce(c1, c2, c1Degree)
-	// TODO move to separate function
 	signx := 0
 	signy := 0
 	delta := 10
@@ -347,6 +390,8 @@ func pushForceDislocation(c1, c2 *SvgCircle, c1Degree int, connected bool) (bool
 		fsign = -1
 	}
 	// change location
+	// find direction
+	// TODO refactor
 	if x1 < x2 {
 		signx = -1
 		if k > 0 {
