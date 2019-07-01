@@ -368,7 +368,7 @@ func (l *list) append(n *node) {
 }
 
 func (l *list) find(id int) *node {
-	if l.head == nil {
+	if l == nil || l.head == nil {
 		return nil
 	}
 	current := l.head

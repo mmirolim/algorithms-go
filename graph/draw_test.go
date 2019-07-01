@@ -6,7 +6,7 @@ import (
 )
 
 func TestSVG(t *testing.T) {
-	s, e := GenSVGFromGraph(twoRhombus)
+	s, e := GenSVGFromGraph(graphData)
 	if e != nil {
 		t.Errorf("unexpected err %+v", e)
 		t.FailNow()
