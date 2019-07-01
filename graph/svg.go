@@ -65,12 +65,11 @@ func idAtoi(id string) int {
 }
 
 // TODO pass r, fill for nodes
-// TODO does not handle directed graphs, compute properly and generate arrows
-func (g *Graph) ConvertToSVG(width, height int, dimUnitW, dimUnitH string) *svg.SVG {
+func (g *Graph) ConvertToSVG(width, height, nodeSize int, dimUnitW, dimUnitH string) *svg.SVG {
 	svgCon := svg.NewSVG(width, height, dimUnitW, dimUnitH)
 	verticesPos := computeVerticePositions(g, 300, 300)
-	nodes, labels := nodesToSvgObjs(g, verticesPos, defNodeRad, defNodeFill)
-	edges, weights := edgesToSvgObjs(g, defWeightFontSize, nodes)
+	nodes, labels := nodesToSvgObjs(g, verticesPos, nodeSize, defNodeFill)
+	edges, weights := edgesToSvgObjs(g, nodeSize, defWeightFontSize, nodes)
 	svgCon.GCircles = nodes
 	svgCon.GLines = edges
 	svgCon.GTexts = labels
@@ -101,7 +100,7 @@ func nodesToSvgObjs(g *Graph, verticesPos [][2]int, r int, fill string) (map[str
 // returns edges as lines and weights as text
 func edgesToSvgObjs(
 	g *Graph,
-	weightFontSize int,
+	nodeRadius, weightFontSize int,
 	nodes map[string]svg.SvgCircle,
 ) (map[string]svg.SvgLine, map[string]svg.SvgText) {
 	edges := g.Edges()
@@ -122,7 +121,15 @@ func edgesToSvgObjs(
 		lID := lineID(v1, v2)
 		x1, y1 := n1.Coords()
 		x2, y2 := n2.Coords()
-		lines[lID] = svg.NewDefSvgLine(lID, x1, y1, x2, y2)
+		if g.isDirected {
+			// compute line end on border of connected node
+			r := nodeRadius
+			d1 := int(Dist(x1, y1, x2, y2))
+			d2 := d1 - r
+			x2 = d2*(x2-x1)/d1 + x1
+			y2 = d2*(y2-y1)/d1 + y1
+		}
+		lines[lID] = svg.NewDefSvgLine(lID, x1, y1, x2, y2, g.isDirected)
 		// position weights
 		x, y := MiddlePoint(x1, y1, x2, y2)
 		vertex2 := g.edges[v1].find(v2)
@@ -209,7 +216,7 @@ func MiddlePoint(x1, y1, x2, y2 int) (x, y int) {
 // stretch F = kDeltaL
 func attractForceByEdge(x1, y1, x2, y2 int, connected bool) float64 {
 	if !connected {
-		return 0.0
+		return 0.01
 	}
 	k := 2200.0
 	defL := 100.0
@@ -218,10 +225,9 @@ func attractForceByEdge(x1, y1, x2, y2 int, connected bool) float64 {
 }
 
 // pull force F = G/r^2
-func pushForce(x1, y1, x2, y2 int, c1Degree int) float64 {
+func pushForce(x1, y1, x2, y2 int) float64 {
 	G := 2200.0
-	f := G / math.Pow(Dist(x1, y1, x2, y2), 2.0)
-	return f
+	return G / math.Pow(Dist(x1, y1, x2, y2), 2.0)
 }
 
 // returns dislocation by force of the first point
@@ -235,7 +241,7 @@ func pushForceDislocation(
 	}
 
 	k := float64(y1-y2) / float64(x1-x2)
-	f := pushForce(x1, y1, x2, y2, c1Degree)
+	f := pushForce(x1, y1, x2, y2)
 	signx := 0
 	signy := 0
 	delta := 10
@@ -243,12 +249,13 @@ func pushForceDislocation(
 	attractForce := attractForceByEdge(x1, y1, x2, y2, connected)
 	forces := f - attractForce
 	// TODO refactor
+	threshold := 0.03 //float64(c1Degree+1)*0.03
 	if forces >= 0 {
-		if forces < float64(c1Degree+1)*0.03 {
+		if forces < threshold {
 			return false, x1, y1
 		}
 	} else {
-		if forces > -float64(c1Degree+1)*0.03 {
+		if forces > -threshold {
 			return false, x1, y1
 		}
 		fsign = -1
@@ -291,6 +298,14 @@ func pushForceDislocation(
 			signy = -1
 		}
 	}
-	return true, x1 + fsign*signx*delta, y1 + fsign*signy*delta
+	x1, y1 = x1+fsign*signx*delta, y1+fsign*signy*delta
+	// border force
+	return true, x1 + borderForce(x1), y1 + borderForce(y1)
+}
 
+func borderForce(x int) int {
+	if x > 30 {
+		return 0
+	}
+	return 15
 }

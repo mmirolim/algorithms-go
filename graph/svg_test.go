@@ -22,7 +22,7 @@ func TestConvertToSVG(t *testing.T) {
 		t.Errorf("NewGraphFrom unexpected err %+v", e)
 		t.FailNow()
 	}
-	s := g.ConvertToSVG(100, 100, "%", "%")
+	s := g.ConvertToSVG(100, 100, 30, "%", "%")
 	e = ioutil.WriteFile("example.svg", []byte(s.Serialize()), 0666)
 	if e != nil {
 		t.Errorf("NewGraphFrom unexpected err %+v", e)
