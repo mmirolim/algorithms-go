@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// TODO add serialization to svg
 type Tree struct {
 	val                 int
 	parent, left, right *Tree

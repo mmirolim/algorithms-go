@@ -64,7 +64,6 @@ func idAtoi(id string) int {
 	return v
 }
 
-// TODO pass r, fill for nodes
 func (g *Graph) ConvertToSVG(width, height, nodeSize int, dimUnitW, dimUnitH string) *svg.SVG {
 	svgCon := svg.NewSVG(width, height, dimUnitW, dimUnitH)
 	verticesPos := computeVerticePositions(g, 300, 300)
@@ -146,7 +145,6 @@ func edgesToSvgObjs(
 
 // compute positions for each vertices
 // returns slice of [2]int{x, y} coordinates
-// TODO handle directed graphs
 func computeVerticePositions(g *Graph, startX, startY int) [][2]int {
 	// position vertices
 	pos := make([][2]int, g.numOfVertices+1)

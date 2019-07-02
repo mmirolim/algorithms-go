@@ -446,3 +446,13 @@ func readLine(r io.Reader) (string, error) {
 	}
 	return string(line), nil
 }
+
+func enqueue(q *[]int, id int) {
+	*q = append(*q, id)
+}
+
+func dequeue(q *[]int) int {
+	out := (*q)[0]
+	*q = (*q)[1:]
+	return out
+}
