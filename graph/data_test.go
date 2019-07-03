@@ -17,7 +17,7 @@ var (
 5
 `
 	graphDataDirectedWeightedWithCodes = `
-5 5 directed weighted hascodes
+5 4 directed weighted hascodes
 1 Bill Clinton
 2 Hillary Clinton
 3 John McCain
@@ -26,7 +26,6 @@ var (
 1 2 10
 1 3 2
 2 3 5
-2 1 8
 3 4 4
 5
 `
