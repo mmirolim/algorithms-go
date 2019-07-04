@@ -132,6 +132,7 @@ func TestMatMul(t *testing.T) {
 		}
 	}
 }
+
 func TestMatScalarMul(t *testing.T) {
 	data := []struct {
 		s      float64
@@ -200,6 +201,70 @@ func TestMatAdd(t *testing.T) {
 		m1Addm2 := d.m1.Add(d.m2)
 		if !m1Addm2.IsEq(d.m1Addm2) {
 			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.m1Addm2, m1Addm2)
+		}
+	}
+}
+
+func TestMatCofactor(t *testing.T) {
+	data := []struct {
+		r, c        int
+		m, cofactor *Matrix
+	}{
+		{
+			r: 0, c: 0,
+			m: NewMat([][]float64{
+				[]float64{2, 3, 4}, []float64{1, 0, 0}, []float64{0, 1, 2}}),
+			cofactor: NewMat([][]float64{[]float64{0, 0}, []float64{1, 2}}),
+		},
+		{
+			r: 1, c: 1,
+			m: NewMat([][]float64{
+				[]float64{2, 3, 4}, []float64{1, 0, 0}, []float64{0, 1, 2}}),
+			cofactor: NewMat([][]float64{[]float64{2, 4}, []float64{0, 2}}),
+		},
+	}
+
+	for i, d := range data {
+		C := d.m.Cofactor(d.r, d.c)
+		if !C.IsEq(d.cofactor) {
+			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.cofactor, C)
+		}
+	}
+}
+
+func TestMatDet(t *testing.T) {
+	data := []struct {
+		Det float64
+		m   *Matrix
+	}{
+		{
+			Det: -3.0,
+			m: NewMat([][]float64{
+				[]float64{2, 3}, []float64{1, 0}}),
+		},
+		{
+			Det: 2.0,
+			m:   NewMat([][]float64{[]float64{2.0}}),
+		},
+		{
+			Det: -2.0,
+			m: NewMat([][]float64{
+				[]float64{2, 3, 4}, []float64{1, 0, 0}, []float64{0, 1, 2}}),
+		},
+		{
+			Det: 30.0,
+			m: NewMat([][]float64{
+				[]float64{1, 0, 2, -1},
+				[]float64{3, 0, 0, 5},
+				[]float64{2, 1, 4, -3},
+				[]float64{1, 0, 5, 0}}),
+		},
+	}
+
+	for i, d := range data {
+		det := d.m.Det()
+		if det != d.Det {
+			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.Det, det)
 		}
 	}
 }

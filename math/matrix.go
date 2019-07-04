@@ -64,28 +64,56 @@ func IdentityMat(dim int) *Matrix {
 	return mat
 }
 
-func (m *Matrix) Cofactor(r, c int) (*Matrix, error) {
+// panics if not square matrix
+func (m *Matrix) Cofactor(r, c int) *Matrix {
 	if m == nil || m.row != m.col {
-		return nil, errors.New("defined only for square matrix")
+		panic("defined only for square matrix")
 	}
 	dim := m.col
 	out := ZeroMat(dim-1, dim-1)
-	i, j := 0, 0
+	i := 0
 	for row := 0; row < dim; row++ {
 		if row == r {
 			continue
 		}
-		i++
+		j := 0
 		for col := 0; col < dim; col++ {
 			if col == c {
 				continue
 			}
-			j++
 			out.m[i*out.col+j] = m.m[row*dim+col]
+			j++
 		}
+		i++
 	}
 
-	return out, nil
+	return out
+}
+
+// panics if not square matrix
+func (m *Matrix) Det() float64 {
+	if m == nil || m.row != m.col {
+		panic("defined only for square matrix")
+	}
+	dim := m.col
+	// base cases
+	if dim == 1 {
+		return m.m[0]
+	} else if dim == 2 {
+		return m.m[0]*m.m[3] - m.m[1]*m.m[2]
+	}
+	sign := func(i, j int) float64 {
+		if (i+j)&1 == 1 {
+			return -1.0
+		}
+		return 1.0
+	}
+	res := 0.0
+	for col := 0; col < dim; col++ {
+		res += sign(0, col) * m.m[col] * m.Cofactor(0, col).Det()
+	}
+
+	return res
 }
 
 func (m *Matrix) Inverse() (*Matrix, error) {
