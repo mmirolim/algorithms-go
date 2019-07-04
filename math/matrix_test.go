@@ -1,257 +1,121 @@
 package math
 
 import (
-	"fmt"
-	"math/rand"
 	"testing"
 )
 
-type Matrix struct {
-	// [c][r]float64
-	mi  interface{}
-	m   [][]float32
-	mc  []float32
-	mci interface{}
-}
-
-var m1e4 = NewMat(1, 1, 1, true)
-var dim = int(5e2)
-var randPerms = rand.Perm(dim)
-
-func NewMat(row, col int, bitsize int, float bool) *Matrix {
-	d := make([][]float32, dim)
-	for i := range d {
-		d[i] = make([]float32, dim)
-		for j := range d[i] {
-			d[i][j] = float32(randPerms[j])
-		}
+func TestNewMat(t *testing.T) {
+	data := []struct {
+		data        [][]float64
+		row, col    int
+		expectedMat *Matrix
+	}{
+		{data: [][]float64{}, row: 0, col: 0, expectedMat: nil},
+		{
+			data: [][]float64{[]float64{54, 21}},
+			row:  1, col: 2,
+			expectedMat: &Matrix{row: 1, col: 2, mlen: 2, m: []float64{54, 21}},
+		},
+		{
+			data: [][]float64{[]float64{1, 3, 1}, []float64{1, 0, 0}},
+			row:  2, col: 3,
+			expectedMat: &Matrix{row: 2, col: 3, mlen: 6, m: []float64{1, 3, 1, 1, 0, 0}},
+		},
 	}
-
-	d2 := make([][]float32, dim)
-	d3 := make([]float32, dim*dim)
-	d4 := make([]float32, dim*dim)
-	for i := range d {
-		d2[i] = make([]float32, dim)
-		for j := range d2[i] {
-			d2[i][j] = float32(randPerms[j])
-			d3[i*dim+j] = d2[i][j]
-			d4[i*dim+j] = d2[i][j]
-		}
-	}
-
-	return &Matrix{mi: d, m: d2, mc: d3, mci: d4}
-}
-
-func (m1 *Matrix) Mul(m2 *Matrix) *Matrix {
-	m3 := make([][]float32, dim)
-	for i := range m3 {
-		m3[i] = make([]float32, dim)
-	}
-	var sum float32
-	for i := range m3 {
-		for j := range m3[i] {
-			for x := 0; x < dim; x++ {
-				sum += m1.m[x][j] + m2.m[i][x]
+	for i, d := range data {
+		m := NewMat(d.data)
+		// check for nil
+		if m == nil {
+			if d.expectedMat == nil {
+				continue
 			}
-			m3[i][j] = sum
-
+			t.Errorf("case [%v] expected %#v, got %#v", i, d.expectedMat, m)
+			continue
 		}
-	}
-	mn := new(Matrix)
-	mn.m = m3
-	return mn
-}
-func (m1 *Matrix) MulWithoutSum(m2 *Matrix) *Matrix {
-	m3 := make([][]float32, dim)
-	for i := range m3 {
-		m3[i] = make([]float32, dim)
-	}
 
-	for i := range m3 {
-		for j := range m3[i] {
-			for x := 0; x < dim; x++ {
-				m3[i][j] += m1.m[x][j] + m2.m[i][x]
+		if m.row != d.row || m.col != d.col {
+			t.Errorf("case [%v] expected dim (row, col) (%d, %d), got (%d, %d)", i, d.row, d.col, m.row, m.col)
+			break
+		}
+
+		if !m.IsEq(d.expectedMat) {
+			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.expectedMat, m)
+		}
+
+	}
+}
+
+func TestZeroMat(t *testing.T) {
+	data := []struct {
+		row, col    int
+		expectedMat *Matrix
+	}{
+		{row: 1, col: 0, expectedMat: nil},
+		{row: 1, col: 1, expectedMat: &Matrix{row: 1, col: 1, mlen: 1, m: []float64{0}}},
+		{row: 1, col: 2, expectedMat: &Matrix{row: 1, col: 2, mlen: 2, m: []float64{0, 0}}},
+		{row: 3, col: 2, expectedMat: &Matrix{row: 3, col: 2, mlen: 6, m: []float64{0, 0, 0, 0, 0, 0}}},
+	}
+	for i, d := range data {
+		m := ZeroMat(d.row, d.col)
+		if m == nil {
+			if d.expectedMat == nil {
+				continue
 			}
+			t.Errorf("case [%v] expected %#v, got %#v", i, d.expectedMat, m)
+			continue
+		}
 
+		if m.row != d.row || m.col != d.col {
+			t.Errorf("case [%v] expected dim (row, col) (%d, %d), got (%d, %d)", i, d.row, d.col, m.row, m.col)
+			break
+		}
+
+		if !m.IsEq(d.expectedMat) {
+			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.expectedMat, m)
+		}
+
+	}
+}
+
+func TestMatMul(t *testing.T) {
+	data := []struct {
+		m1, m2  *Matrix
+		m1Mulm2 *Matrix
+	}{
+		{
+			m1:      NewMat([][]float64{[]float64{2, 3, 4}, []float64{1, 0, 0}}),
+			m2:      NewMat([][]float64{[]float64{0, 1000}, []float64{1, 100}, []float64{0, 10}}),
+			m1Mulm2: NewMat([][]float64{[]float64{3, 2340}, []float64{0, 1000}}),
+		},
+		{
+			m1:      NewMat([][]float64{[]float64{1, 2}, []float64{3, 4}}),
+			m2:      NewMat([][]float64{[]float64{0, 1}, []float64{0, 0}}),
+			m1Mulm2: NewMat([][]float64{[]float64{0, 1}, []float64{0, 3}}),
+		},
+	}
+
+	for i, d := range data {
+		m1xm2 := d.m1.Mul(d.m2)
+		if !m1xm2.IsEq(d.m1Mulm2) {
+			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.m1Mulm2, m1xm2)
 		}
 	}
-	mn := new(Matrix)
-	mn.m = m3
-	return mn
 }
 
-func (m1 *Matrix) MulCont(m2 *Matrix) *Matrix {
-	m3 := make([]float32, dim*dim)
-	var sum float32
-	for i := 0; i < dim; i++ {
-		for j := 0; j < dim; j++ {
-			for x := 0; x < dim; x++ {
-				sum += m1.mc[x*dim+j] + m2.mc[i*dim+x]
-			}
-			m3[i*dim+j] = sum
+func TestMatToString(t *testing.T) {
+	data := []struct {
+		m              *Matrix
+		expectedString string
+	}{
+		{NewMat([][]float64{[]float64{2, 3, 4}, []float64{1, 0, 0}}), "| 2 3 4 |\n| 1 0 0 |\n"},
+		{NewMat([][]float64{[]float64{0, 1000}, []float64{1, 100}, []float64{0, 10}}), "| 0 1000 |\n| 1 100 |\n| 0 10 |\n"},
+		{NewMat([][]float64{[]float64{0, 1}, []float64{0, 3}}), "| 0 1 |\n| 0 3 |\n"},
+	}
+
+	for i, d := range data {
+		res := d.m.ToString()
+		if d.expectedString != res {
+			t.Errorf("case [%v] expected mat \n%s\ngot\n%s", i, d.expectedString, res)
 		}
 	}
-	mn := new(Matrix)
-	mn.mc = m3
-	return mn
-}
-
-func (m1 *Matrix) MulContWithoutSum(m2 *Matrix) *Matrix {
-	m3 := make([]float32, dim*dim)
-	for i := 0; i < dim; i++ {
-		for j := 0; j < dim; j++ {
-			for x := 0; x < dim; x++ {
-				m3[i*dim+j] += m1.mc[x*dim+j] + m2.mc[i*dim+x]
-			}
-
-		}
-	}
-	mn := new(Matrix)
-	mn.mc = m3
-	return mn
-}
-
-func BenchmarkMul(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.Mul(m1e4)
-	}
-}
-
-func BenchmarkMulWithoutSum(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.MulWithoutSum(m1e4)
-	}
-}
-
-func BenchmarkMulCont(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.MulCont(m1e4)
-	}
-}
-
-func BenchmarkMulContWithoutSum(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.MulContWithoutSum(m1e4)
-	}
-}
-
-func (m *Matrix) IterateSumInterface() int {
-	sum := 0
-	d := m.mi.([][]float32)
-	for i := range d {
-		for j := range d[i] {
-			sum += int(d[i][j])
-		}
-	}
-	return sum
-}
-
-func (m *Matrix) IterateSumf32CR() int {
-	sum := 0
-	d := m.m
-	for i := range d {
-		for j := range d {
-			sum += int(d[i][j])
-		}
-	}
-	return sum
-}
-func (m *Matrix) IterateSumf32RC() int {
-	sum := 0
-	d := m.m
-	for i := range d {
-		for j := range d {
-			sum += int(d[j][i])
-		}
-	}
-	return sum
-}
-
-func (m *Matrix) IterateSumf32Continuous() int {
-	sum := 0
-	d := m.mc
-	for r := 0; r < dim; r++ {
-		for c := 0; c < dim; c++ {
-			sum += int(d[r*dim+c])
-		}
-	}
-	return sum
-}
-
-func (m *Matrix) IterateSumf32ContinuousInterface() int {
-	sum := 0
-	d := m.mci.([]float32)
-	for r := 0; r < dim; r++ {
-		for c := 0; c < dim; c++ {
-			sum += int(d[r*dim+c])
-		}
-	}
-	return sum
-}
-
-func TestSum(t *testing.T) {
-	m := NewMat(1, 1, 1, true)
-	sInterface := m.IterateSumInterface()
-	sf32CR := m.IterateSumf32CR()
-	sf32RC := m.IterateSumf32RC()
-	sf32Cont := m.IterateSumf32Continuous()
-	sf32ContInf := m.IterateSumf32ContinuousInterface()
-	fmt.Printf("%v sInterface\n%v sf32CR\n%v sf32RC\n%v sf32Cont\n%v sf32ContInf\n", sInterface, sf32CR, sf32RC, sf32Cont, sf32ContInf) // output for debug
-
-}
-
-func BenchmarkIterateSumInterface(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.IterateSumInterface()
-	}
-}
-
-func BenchmarkIterateSumf32CR(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.IterateSumf32CR()
-	}
-}
-
-func BenchmarkIterateSumf32RC(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.IterateSumf32RC()
-	}
-}
-
-func BenchmarkIterateSumf32Continuous(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.IterateSumf32Continuous()
-	}
-}
-
-func BenchmarkIterateSumf32ContinuousInterface(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = m1e4.IterateSumf32ContinuousInterface()
-	}
-}
-
-/*
-dim = 5e2
-goos: linux
-goarch: amd64
-pkg: github.com/mmirolim/algos/math
-BenchmarkMul-4                                	       3	 385947903 ns/op
-BenchmarkMulWithoutSum-4                      	       2	 531958756 ns/op
-BenchmarkMulCont-4                            	      10	 207222959 ns/op
-BenchmarkMulContWithoutSum-4                  	       5	 389149370 ns/op
-BenchmarkIterateSumInterface-4                	   10000	    150211 ns/op
-BenchmarkIterateSumf32CR-4                    	   10000	    225037 ns/op
-BenchmarkIterateSumf32RC-4                    	    3000	    423330 ns/op
-BenchmarkIterateSumf32Continuous-4            	    5000	    256719 ns/op
-BenchmarkIterateSumf32ContinuousInterface-4   	    5000	    225407 ns/op
-*/
-
-func TestMatDim(t *testing.T) {
-	// 	data := []struct{
-
-	// 	}
-	// 	{1*2} *quantity {2*1} ===> value {1*1}
-	// 	{2*3} times {3*5} ==> {2*5}
-	// 	{3*2} times {2*4} ==> {3*4}
-	// 	{1*2} times {2*1} ==> {1*1}
 }
