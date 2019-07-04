@@ -1,6 +1,7 @@
 package math
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -49,16 +50,67 @@ func ZeroMat(row, col int) *Matrix {
 	return mat
 }
 
-func (m1 *Matrix) Dim() (row, col int) {
-	return m1.row, m1.col
+func IdentityMat(dim int) *Matrix {
+	if dim == 0 {
+		return nil
+	}
+	mat := new(Matrix)
+	mat.row, mat.col = dim, dim
+	mat.mlen = dim * dim
+	mat.m = make([]float64, mat.mlen)
+	for i := 0; i < dim; i++ {
+		mat.m[i*dim+i] = 1.0
+	}
+	return mat
 }
 
-func (m1 *Matrix) ToString() string {
+func (m *Matrix) Cofactor(r, c int) (*Matrix, error) {
+	if m == nil || m.row != m.col {
+		return nil, errors.New("defined only for square matrix")
+	}
+	dim := m.col
+	out := ZeroMat(dim-1, dim-1)
+	i, j := 0, 0
+	for row := 0; row < dim; row++ {
+		if row == r {
+			continue
+		}
+		i++
+		for col := 0; col < dim; col++ {
+			if col == c {
+				continue
+			}
+			j++
+			out.m[i*out.col+j] = m.m[row*dim+col]
+		}
+	}
+
+	return out, nil
+}
+
+func (m *Matrix) Inverse() (*Matrix, error) {
+	panic("not implemented")
+	err := errors.New("inverse matrix not found")
+	if m == nil {
+		return nil, errors.New("matrix is nil")
+	}
+	// must be square matrix
+	if m.row != m.col {
+		return nil, err
+	}
+	return nil, err
+}
+
+func (m *Matrix) Dim() (row, col int) {
+	return m.row, m.col
+}
+
+func (m *Matrix) ToString() string {
 	var str strings.Builder
-	for r := 0; r < m1.row; r++ {
+	for r := 0; r < m.row; r++ {
 		str.WriteString("| ")
-		for c := 0; c < m1.col; c++ {
-			str.WriteString(strconv.FormatFloat(m1.m[r*m1.col+c], 'f', -1, 64))
+		for c := 0; c < m.col; c++ {
+			str.WriteString(strconv.FormatFloat(m.m[r*m.col+c], 'f', -1, 64))
 			str.WriteByte(' ')
 		}
 		str.WriteByte('|')
@@ -68,13 +120,20 @@ func (m1 *Matrix) ToString() string {
 	return str.String()
 }
 
-func (m1 *Matrix) IsEq(m2 *Matrix) bool {
+func (m1 *Matrix) IsDimEq(m2 *Matrix) bool {
 	if m2 == nil {
 		return false
 	}
 	r1, c1 := m1.Dim()
 	r2, c2 := m2.Dim()
 	if r1 != r2 || c1 != c2 {
+		return false
+	}
+	return true
+}
+
+func (m1 *Matrix) IsEq(m2 *Matrix) bool {
+	if !m1.IsDimEq(m2) {
 		return false
 	}
 	for i := 0; i < m1.mlen; i++ {
@@ -101,6 +160,49 @@ func (m1 *Matrix) Mul(m2 *Matrix) *Matrix {
 				sum += m1.m[i*m1.col+x] * m2.m[x*m2.col+j]
 			}
 			out.m[i*out.col+j] = sum
+		}
+	}
+
+	return out
+}
+
+func (m1 *Matrix) Add(m2 *Matrix) *Matrix {
+	// check inner dimension
+	// {a*d} X {d*b} ===> value {a*b}
+	if !m1.IsDimEq(m2) {
+		return nil
+	}
+	row, col := m1.row, m2.col
+	out := ZeroMat(row, col)
+	for i := 0; i < row; i++ {
+		for j := 0; j < col; j++ {
+			out.m[i*col+j] = m1.m[i*col+j] + m2.m[i*col+j]
+		}
+	}
+
+	return out
+}
+
+func (m1 *Matrix) ScalarMul(s float64) *Matrix {
+	if m1 == nil {
+		return nil
+	}
+	out := ZeroMat(m1.row, m1.col)
+	for i := 0; i < m1.mlen; i++ {
+		out.m[i] = s * m1.m[i]
+	}
+
+	return out
+}
+
+func (m1 *Matrix) Transpose() *Matrix {
+	if m1 == nil {
+		return nil
+	}
+	out := ZeroMat(m1.col, m1.row)
+	for i := 0; i < m1.row; i++ {
+		for j := 0; j < m1.col; j++ {
+			out.m[j*out.col+i] = m1.m[i*m1.col+j]
 		}
 	}
 
