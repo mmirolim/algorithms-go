@@ -2,6 +2,7 @@ package math
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -149,12 +150,13 @@ func (m *Matrix) Dim() (row, col int) {
 	return m.row, m.col
 }
 
-func (m *Matrix) ToString() string {
+// prec - precision
+func (m *Matrix) ToString(prec int) string {
 	var str strings.Builder
 	for r := 0; r < m.row; r++ {
 		str.WriteString("| ")
 		for c := 0; c < m.col; c++ {
-			str.WriteString(strconv.FormatFloat(m.m[r*m.col+c], 'f', -1, 64))
+			str.WriteString(strconv.FormatFloat(m.m[r*m.col+c], 'f', prec, 64))
 			str.WriteByte(' ')
 		}
 		str.WriteByte('|')
@@ -181,7 +183,7 @@ func (m1 *Matrix) IsEq(m2 *Matrix) bool {
 		return false
 	}
 	for i := 0; i < m1.mlen; i++ {
-		if m1.m[i] != m2.m[i] {
+		if math.Abs(m1.m[i]-m2.m[i]) > 1.0E-5 {
 			return false
 		}
 	}

@@ -305,7 +305,7 @@ func TestMatInverse(t *testing.T) {
 		for r := 0; r < dim; r++ {
 			for c := 0; c < dim; c++ {
 				if math.Abs(invM.m[r*dim+c]-d.invM.m[r*dim+c]) > 1.0E-5 {
-					t.Errorf("case [%v] expected mat\n%s\ngot\n%s\n", i, d.invM.ToString(), invM.ToString())
+					t.Errorf("case [%v] expected mat\n%s\ngot\n%s\n", i, d.invM.ToString(4), invM.ToString(4))
 					t.FailNow()
 				}
 			}
@@ -325,7 +325,7 @@ func TestMatToString(t *testing.T) {
 	}
 
 	for i, d := range data {
-		res := d.m.ToString()
+		res := d.m.ToString(0)
 		if d.expectedString != res {
 			t.Errorf("case [%v] expected mat \n%s\ngot\n%s", i, d.expectedString, res)
 		}
