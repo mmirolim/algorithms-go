@@ -1,6 +1,7 @@
 package math
 
 import (
+	"math"
 	"testing"
 )
 
@@ -266,6 +267,50 @@ func TestMatDet(t *testing.T) {
 		if det != d.Det {
 			t.Errorf("case [%v] expected mat %#v, got %#v", i, d.Det, det)
 		}
+	}
+}
+
+func TestMatInverse(t *testing.T) {
+	data := []struct {
+		M, invM *Matrix
+	}{
+		{
+			M: NewMat([][]float64{
+				[]float64{4, 0}, []float64{0, 4}}),
+			invM: NewMat([][]float64{
+				[]float64{0.25, 0}, []float64{0, 0.25}}),
+		},
+		{
+			M: NewMat([][]float64{
+				[]float64{5, -2, 2, 7},
+				[]float64{1, 0, 0, 3},
+				[]float64{-3, 1, 5, 0},
+				[]float64{3, -1, -9, 4},
+			}),
+			invM: NewMat([][]float64{
+				[]float64{-0.136364, 0.863636, -0.681818, -0.409091},
+				[]float64{-0.636364, 2.36364, -0.931818, -0.659091},
+				[]float64{0.0454545, 0.0454545, -0.0227273, -0.113636},
+				[]float64{0.0454545, 0.0454545, 0.227273, 0.136364},
+			}),
+		},
+	}
+
+	for i, d := range data {
+		invM, err := d.M.Inverse()
+		if err != nil {
+			t.Errorf("case [%d] Inverse unexpected error %v", i, err)
+		}
+		dim := invM.row
+		for r := 0; r < dim; r++ {
+			for c := 0; c < dim; c++ {
+				if math.Abs(invM.m[r*dim+c]-d.invM.m[r*dim+c]) > 1.0E-5 {
+					t.Errorf("case [%v] expected mat\n%s\ngot\n%s\n", i, d.invM.ToString(), invM.ToString())
+					t.FailNow()
+				}
+			}
+		}
+
 	}
 }
 

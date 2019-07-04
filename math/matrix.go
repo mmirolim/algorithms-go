@@ -117,16 +117,32 @@ func (m *Matrix) Det() float64 {
 }
 
 func (m *Matrix) Inverse() (*Matrix, error) {
-	panic("not implemented")
-	err := errors.New("inverse matrix not found")
-	if m == nil {
-		return nil, errors.New("matrix is nil")
-	}
-	// must be square matrix
 	if m.row != m.col {
-		return nil, err
+		return nil, errors.New("not a square matrix")
 	}
-	return nil, err
+
+	detM := m.Det()
+	if detM == 0 {
+		return nil, errors.New("inverse matrix not found")
+	}
+
+	sign := func(i, j int) float64 {
+		if (i+j)&1 == 1 {
+			return -1.0
+		}
+		return 1.0
+	}
+	dim := m.row
+	out := ZeroMat(dim, dim)
+	// find cofactor matrix
+	for r := 0; r < dim; r++ {
+		for c := 0; c < dim; c++ {
+			out.m[r*dim+c] = sign(r, c) * m.Cofactor(r, c).Det()
+		}
+	}
+	// find Adjoint matrix by transposing it
+	adjM := out.Transpose()
+	return adjM.ScalarMul(1 / detM), nil
 }
 
 func (m *Matrix) Dim() (row, col int) {
