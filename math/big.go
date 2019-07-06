@@ -3,33 +3,69 @@ package math
 // Supports only positive numbers and multiplication by int
 // TODO add sign, addition, subtraction, multiplication by int and Big
 type BigInt struct {
-	s []uint8
+	s     []uint8
+	nums  []uint8
+	temp  []uint8
+	final []uint8
 }
 
 func NewBig(n int) *BigInt {
 	b := new(BigInt)
 	b.s = make([]uint8, 0, 10)
-	nums := parseInt(n)
-	for i := 0; i < len(nums); i++ {
-		b.s = append(b.s, nums[i])
+	b.nums = []uint8{}
+	b.temp = make([]uint8, 10)
+	b.final = make([]uint8, 10)
+	parseInt(n, &b.nums)
+	for i := 0; i < len(b.nums); i++ {
+		b.s = append(b.s, b.nums[i])
 	}
+	b.nums = b.nums[:0]
 	return b
 }
 
 func (b *BigInt) Mul(n int) {
-	nums := parseInt(n)
-	adds := make([][]uint8, len(nums))
-	adds[0] = b.s
-	for i := 1; i < len(adds); i++ {
-		adds[i] = make([]uint8, i+len(b.s))
-		copy(adds[i][i:], b.s)
-		scalarMul(nums[i], &adds[i])
+	parseInt(n, &b.nums)
+	maxLen := len(b.s) + len(b.nums)
+	if maxLen > len(b.temp) {
+		// extend
+		b.temp = append(b.temp,
+			make([]uint8, maxLen-len(b.temp))...)
+	} else {
+		b.temp = b.temp[:maxLen]
 	}
-	scalarMul(nums[0], &adds[0])
-	for i := 0; i < len(adds)-1; i++ {
-		add(&adds[len(adds)-1], &adds[i])
+	for i := 0; i < len(b.final); i++ {
+		b.final[i] = 0
 	}
-	b.s = adds[len(adds)-1]
+
+	if maxLen > len(b.final) {
+		// extend
+		b.final = append(b.final,
+			make([]uint8, maxLen-len(b.final))...)
+	} else {
+		b.final = b.final[:maxLen]
+	}
+
+	for i := 0; i < len(b.nums); i++ {
+		for j := 0; j < i; j++ {
+			b.temp[j] = 0
+		}
+		tmp := b.temp[i:]
+		scalarMul(&tmp, b.nums[i], b.s)
+		add(&b.final, &b.temp)
+	}
+
+	last := len(b.final)
+	var prev uint8
+	for i := len(b.final) - 1; i > 0; i-- {
+		if prev == 0 && b.final[i] == 0 {
+			last = i
+		} else {
+			break
+		}
+		prev = b.final[i]
+	}
+	b.nums = b.nums[:0]
+	b.s, b.final = b.final[:last], b.s
 }
 
 func (b *BigInt) String() string {
@@ -41,21 +77,20 @@ func (b *BigInt) String() string {
 	return string(str)
 }
 
-func parseInt(n int) []uint8 {
-	out := make([]uint8, 0, 10)
+func parseInt(n int, nums *[]uint8) {
+	ds := *nums
 	var d uint8
 	for {
 		d = uint8(n % 10)
-		out = append(out, d)
+		ds = append(ds, d)
 		n = n / 10
 		if n == 0 {
 			break
 		}
 	}
-	return out
+	*nums = ds
 }
 
-// result is in n1
 func add(n1, n2 *[]uint8) {
 	s1, s2 := *n1, *n2
 	if len(s1) < len(s2) {
@@ -65,38 +100,38 @@ func add(n1, n2 *[]uint8) {
 			s1 = append(s1, 0)
 		}
 	}
-	var carry, r, v2 uint8 = 0, 0, 0
-	ls := len(s1)
+	var carry uint8
+	ls := len(s2)
 	for i := 0; i < ls; i++ {
-		v2 = 0
-		if i < len(s2) {
-			v2 = s2[i]
-		}
-		s1[i] = s1[i] + v2 + carry
-		r = s1[i] % 10
+		s1[i] = s1[i] + s2[i] + carry
 		carry = s1[i] / 10
-		s1[i] = r
+		s1[i] = s1[i] % 10
+
 	}
-	if carry > 0 {
-		s1 = append(s1, 1)
+	for carry > 0 {
+		s1[ls] = s1[ls] + carry
+		carry = s1[ls] / 10
+		s1[ls] = s1[ls] % 10
+		ls++
 	}
 	*n1 = s1
 }
 
-func scalarMul(c uint8, n *[]uint8) {
+func scalarMul(dist *[]uint8, c uint8, s []uint8) {
 	if c > 9 {
 		panic("c must be [0,9]")
 	}
-	s := *n
-	var carry, r uint8 = 0, 0
-	for i := 0; i < len(s); i++ {
-		s[i] = s[i]*c + carry
-		r = s[i] % 10
-		carry = s[i] / 10
-		s[i] = r
+	d := *dist
+	var carry uint8
+	ls := len(s)
+	for i := 0; i < ls; i++ {
+		d[i] = s[i]*c + carry
+		carry = d[i] / 10
+		d[i] = d[i] % 10
 	}
+
 	if carry > 0 {
-		s = append(s, carry)
+		d[ls] = d[ls] + carry
 	}
-	*n = s
+	*dist = d
 }
