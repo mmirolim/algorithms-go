@@ -35,13 +35,15 @@ func AssertEq(t *testing.T, expected, got interface{}, msg ...string) bool {
 	}
 	expectedv := reflect.ValueOf(expected)
 	gotv := reflect.ValueOf(got)
+
 	if expectedv.Kind() != reflect.Slice {
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("%s\nexpected\n%v\ngot\n%v\n", txt, expected, got)
 			return false
 		}
-	}
+		return true
 
+	}
 	expectedLen := expectedv.Len()
 	if expectedLen != gotv.Len() {
 		t.Errorf("%s\nslices Len not equal\n%v\n%v\n", txt, expectedLen, gotv.Len())
