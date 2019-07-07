@@ -351,6 +351,8 @@ func Permutate(s string) []string {
 			for i := l; i <= r; i++ {
 				str[l], str[i] = str[i], str[l]
 				permutate(str, l+1, r)
+				// restore order
+				str[l], str[i] = str[i], str[l]
 			}
 		}
 	}

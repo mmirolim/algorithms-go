@@ -2,6 +2,8 @@ package strings
 
 import (
 	"testing"
+
+	"github.com/mmirolim/algos/checks"
 )
 
 func TestCheckParenthesesBalanced03(t *testing.T) {
@@ -328,6 +330,20 @@ func TestCryptKickerIIDecodeString(t *testing.T) {
 	}
 
 }
+func TestPermutate(t *testing.T) {
+	data := []struct {
+		str   string
+		perms []string
+	}{
+		{"AB", []string{"AB", "BA"}},
+		{"123", []string{"123", "132", "213", "231", "321", "312"}},
+	}
+	for _, d := range data {
+		out := Permutate(d.str)
+		checks.AssertEq(t, d.perms, out)
+	}
+}
+
 func BenchmarkWhereIsWaldorfFindString(b *testing.B) {
 	grid := []string{
 		"abcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhiggabcDEFGhigg",
