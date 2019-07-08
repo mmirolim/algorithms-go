@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// https://www.hackerrank.com/challenges/encryption/problem
 func Encryption(in string) string {
 	in = strings.Replace(in, " ", "", -1)
 	r, c := getRC(len(in))
