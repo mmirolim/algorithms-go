@@ -179,5 +179,23 @@ func TestClimbingTheLeaderboard(t *testing.T) {
 		out := ClimbingTheLeaderboard(d.board, d.scores)
 		checks.AssertEq(t, d.ranks, out, caseStr(i))
 	}
+}
 
+func TestTimeInWords(t *testing.T) {
+	data := []struct {
+		// hour and minutes
+		hour, minutes int32
+		str           string
+	}{
+		{5, 47, "thirteen minutes to six"},
+		{3, 0, "three o' clock"},
+		{7, 15, "quarter past seven"},
+		{5, 1, "one minute past five"},
+		{11, 28, "twenty eight minutes past eleven"},
+		{5, 30, "half past five"},
+	}
+	for i, d := range data {
+		out := TimeInWords(d.hour, d.minutes)
+		checks.AssertEq(t, d.str, out, caseStr(i))
+	}
 }
