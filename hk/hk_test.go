@@ -157,3 +157,27 @@ func TestBiggerIsGreater(t *testing.T) {
 		checks.AssertEq(t, d.out, out, caseStr(i))
 	}
 }
+
+func TestClimbingTheLeaderboard(t *testing.T) {
+	data := []struct {
+		board  []int
+		scores []int
+		ranks  []int
+	}{
+		{
+			[]int{100, 100, 50, 40, 40, 20, 10},
+			[]int{5, 25, 50, 120},
+			[]int{6, 4, 2, 1},
+		},
+		{
+			[]int{100, 90, 90, 80, 75, 60},
+			[]int{50, 65, 77, 90, 102},
+			[]int{6, 5, 4, 2, 1},
+		},
+	}
+	for i, d := range data {
+		out := ClimbingTheLeaderboard(d.board, d.scores)
+		checks.AssertEq(t, d.ranks, out, caseStr(i))
+	}
+
+}
