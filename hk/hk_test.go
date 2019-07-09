@@ -199,3 +199,21 @@ func TestTimeInWords(t *testing.T) {
 		checks.AssertEq(t, d.str, out, caseStr(i))
 	}
 }
+
+func TestOrganizingContainersOfBalls(t *testing.T) {
+	data := []struct {
+		cons     [][]int32
+		possible bool
+	}{
+		{cons: [][]int32{[]int32{1, 1}, []int32{1, 1}}, possible: true},
+		{cons: [][]int32{[]int32{0, 2}, []int32{1, 1}}, possible: false},
+		{cons: [][]int32{[]int32{1, 3, 1}, []int32{2, 1, 2}, []int32{3, 3, 3}},
+			possible: false},
+		{cons: [][]int32{[]int32{0, 2, 1}, []int32{1, 1, 1}, []int32{2, 0, 0}}, possible: true},
+	}
+
+	for i, d := range data {
+		out := OrganizingContainersOfBalls(d.cons)
+		checks.AssertEq(t, d.possible, out, caseStr(i))
+	}
+}
