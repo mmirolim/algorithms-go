@@ -7,56 +7,36 @@ func TimeInWords(hour, minutes int32) string {
 	oclock := "o' clock"
 	mins := "minutes"
 	min := "minute"
-	quarter := "quarter"
-	half := "half"
 	past, to := "past", "to"
-	digits := []string{"zero", "one", "two", "three", "four",
-		"five", "six", "seven", "eight", "nine",
+	numWords := []string{"", "one", "two", "three", "four",
+		"five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
+		"fourteen", "quarter", "sixteen", "seventeen", "eighteen",
+		"nineteen", "twenty",
 	}
-	teens := []string{"ten", "eleven", "twelve", "thirteen",
-		"fourteen", "fifteen", "sixteen", "seventeen", "eighteen",
-		"nineteen",
+	tyes := []string{"", "ten", "twenty", "half"}
+	if minutes == 0 {
+		return numWords[hour] + " " + oclock
 	}
-	tyes := []string{"0", "ten", "twenty"}
 	pastOrTo := past
 	if minutes > 30 {
 		pastOrTo = to
 		minutes = 60 - minutes
 		hour++
 	}
-	tens, digit := getDigits(minutes)
-	out := []string{}
-	if tens == 0 && digit != 0 {
-		if digit == 1 {
-			out = []string{digits[digit], min, pastOrTo}
-		} else {
-			out = []string{digits[digit], mins, pastOrTo}
-		}
-	} else if tens == 1 {
-		if digit == 5 {
-			out = []string{quarter, pastOrTo}
-		} else {
-			out = []string{teens[digit], mins, pastOrTo}
-		}
-	} else if tens >= 2 {
-		if tens == 3 && digit == 0 {
-			out = []string{half, past}
-		} else {
-			out = []string{tyes[tens], digits[digit], mins, pastOrTo}
-		}
-	}
-	tens, digit = getDigits(hour)
-	var hours []string
-	if tens == 0 {
-		hours = []string{digits[digit]}
+	var out []string
+	if minutes == 1 {
+		out = []string{numWords[minutes], min}
+	} else if minutes == 15 {
+		out = []string{numWords[minutes]}
+	} else if minutes == 30 {
+		out = []string{tyes[minutes/10]}
+	} else if minutes <= 20 {
+		out = []string{numWords[minutes], mins}
 	} else {
-		hours = []string{teens[digit]}
+		out = []string{tyes[minutes/10] + " " + numWords[minutes%10], mins}
 	}
 
-	if len(out) == 0 {
-		hours = append(hours, oclock)
-	}
-	out = append(out, hours...)
+	out = append(out, []string{pastOrTo, numWords[hour]}...)
 	return strings.Join(out, " ")
 }
 
