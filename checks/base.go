@@ -23,6 +23,24 @@ func (t *Tester) AssertEq(v1, v2 interface{}) bool {
 	return AssertEq(t.t, v1, v2)
 }
 
+func AssertEqErr(t *testing.T, expected, got error, msg ...string) bool {
+	t.Helper()
+	txt := ""
+	if len(msg) > 0 {
+		txt = msg[0]
+	}
+
+	if expected == got {
+		return true
+	}
+
+	if expected != nil && got != nil && expected.Error() == got.Error() {
+		return true
+	}
+	t.Errorf("%s\nErr expected\n%v\ngot\n%v\n", txt, expected, got)
+	return false
+}
+
 func AssertEq(t *testing.T, expected, got interface{}, msg ...string) bool {
 	t.Helper()
 	txt := ""

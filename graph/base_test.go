@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/mmirolim/algos/checks"
@@ -26,28 +27,18 @@ func TestNewGraphFrom(t *testing.T) {
 	}
 	for i, d := range data {
 		g, err := NewGraphFrom(d.text)
-		if checks.NeqErrs(err, d.expectedErr) {
-			t.Errorf("case [%v] expected err %v, got err %v",
-				i, d.expectedErr, err)
+		if !checks.AssertEqErr(t, d.expectedErr, err, caseStr(i)) {
 			continue
 		}
+		checks.AssertEq(t, d.isDirected, g.IsDirected(), caseStr(i))
+		checks.AssertEq(t, d.isWeighted, g.IsWeighted(), caseStr(i))
+
 		vertices := g.Vertices()
-		if len(vertices) != d.numOfVertices {
-			t.Errorf("case [%v] expected vertices %v, got %v",
-				i, d.numOfVertices, len(vertices))
-		}
-		for j, ver := range d.vertices {
-			if ver != vertices[j] {
-				t.Errorf("case [%v] expected vertices %v, got %v",
-					i, d.vertices, vertices)
-				break
-			}
-		}
+		checks.AssertEq(t, d.vertices, vertices, caseStr(i)+" vertices")
 
 		edgesFromGraph := g.Edges()
-		if len(edgesFromGraph) != d.numOfEdges {
-			t.Errorf("case [%v] expected edges %v, got %v", i, d.numOfEdges, len(edgesFromGraph))
-		}
+		checks.AssertEq(t, d.numOfEdges, len(edgesFromGraph), caseStr(i)+" edges")
+
 		for j, edge := range d.edges {
 			if edge[0] != edgesFromGraph[j][0] || edge[1] != edgesFromGraph[j][1] {
 				t.Errorf("case [%v] expected edge %v, got %v",
@@ -55,14 +46,7 @@ func TestNewGraphFrom(t *testing.T) {
 				break
 			}
 		}
-		if g.IsDirected() != d.isDirected {
-			t.Errorf("case [%v] expected directed %v, got %v",
-				i, d.isDirected, g.IsDirected())
-		}
-		if g.IsWeighted() != d.isWeighted {
-			t.Errorf("case [%v] expected weighted %v, got %v",
-				i, d.isWeighted, g.IsWeighted())
-		}
+
 		edges := g.EdgesWithWeights()
 		for j, edge := range d.edgesWithWeights {
 			if edge[0] != edges[j][0] ||
@@ -110,6 +94,15 @@ func TestNewGraphFromConsistencyCheck(t *testing.T) {
 2 3
 3 4
 5`
+	wrongNumOfVerticesAndEdges := `5 4
+1 2
+1 3
+2 3
+3 4
+5 6
+5 7
+`
+
 	data := []struct {
 		wrongData   string
 		expectedErr error
@@ -118,6 +111,7 @@ func TestNewGraphFromConsistencyCheck(t *testing.T) {
 		{wrongNumOfVertices, ErrWrongNumOfVertices},
 		{weightMissing, ErrWeightMissing},
 		{wrongNumOfEdges, ErrWrongNumOfEdges},
+		{wrongNumOfVerticesAndEdges, ErrWrongNumOfVertices},
 	}
 	for i, d := range data {
 		_, err := NewGraphFrom(d.wrongData)
@@ -180,4 +174,44 @@ func TestGraphToString(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGraphComponents(t *testing.T) {
+	graph1 := `7 6
+1 2
+1 3
+2 3
+3 4
+5 6
+5 7
+`
+
+	graph2 := `7 5
+1 2
+1 3
+2 3
+3 4
+5 6
+7
+`
+
+	data := []struct {
+		text     string
+		expected [][]int
+	}{
+		{graph1, [][]int{[]int{1, 2, 3, 4}, []int{5, 6, 7}}},
+		{graph2, [][]int{[]int{1, 2, 3, 4}, []int{5, 6}, []int{7}}},
+	}
+	for i, d := range data {
+		g, err := NewGraphFrom(d.text)
+		if !checks.AssertEqErr(t, nil, err, caseStr(i)) {
+			continue
+		}
+		comps := g.Components()
+		checks.AssertEq(t, d.expected, comps, caseStr(i))
+	}
+}
+
+func caseStr(i int) string {
+	return "case [" + strconv.Itoa(i) + "]"
 }

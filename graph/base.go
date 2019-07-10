@@ -12,6 +12,7 @@ var (
 	ErrWrongNumOfVertices = errors.New("err wrong number of vertices")
 	ErrWeightMissing      = errors.New("err weight missing")
 	ErrWrongNumOfEdges    = errors.New("err wrong number of edges")
+	ErrWrongVertexID      = errors.New("err wrong vertex id range")
 )
 
 type Graph struct {
@@ -84,14 +85,19 @@ func NewGraphFrom(txt string) (*Graph, error) {
 	if err != nil {
 		return nil, err
 	}
+	g.countDegrees()
 	return g, nil
 }
-func (g *Graph) checkNumOfEdges() error {
+
+func (g *Graph) countDegrees() {
 	for i := range g.edges {
 		if g.edges[i] != nil {
 			g.degree[i] = g.edges[i].len
 		}
 	}
+}
+
+func (g *Graph) checkNumOfEdges() error {
 	edges := g.Edges()
 	if len(edges) != g.numOfEdges {
 		return ErrWrongNumOfEdges
@@ -182,19 +188,37 @@ func (g *Graph) edgeFromString(line string, seenVertices map[int]bool) error {
 			return err
 		}
 	}
-	g.insertEdge(v1, v2, w, g.isDirected)
+	return g.insertEdge(v1, v2, w, g.isDirected)
+}
+
+func (g *Graph) checkVertexID(id int) error {
+	if id > g.numOfVertices {
+		return ErrWrongNumOfVertices
+	} else if id <= 0 {
+		return ErrWrongVertexID
+	}
 	return nil
 }
 
-func (g *Graph) insertEdge(v1, v2, w int, directed bool) {
+func (g *Graph) insertEdge(v1, v2, w int, directed bool) error {
+	err := g.checkVertexID(v1)
+	if err != nil {
+		return err
+	}
+	err = g.checkVertexID(v2)
+	if err != nil {
+		return err
+	}
+
 	if g.edges[v1] == nil {
 		g.edges[v1] = newList(newNode(v2, w))
 	} else {
 		g.edges[v1].append(newNode(v2, w))
 	}
 	if !directed {
-		g.insertEdge(v2, v1, w, true)
+		return g.insertEdge(v2, v1, w, true)
 	}
+	return nil
 }
 
 func (g *Graph) IsDirected() bool {
@@ -261,6 +285,25 @@ func (g *Graph) isSameEdge(v1, v2 int, m map[int]map[int]bool) bool {
 		m[v1][v2] = true
 	}
 	return false
+}
+
+// TODO handle directed graphs
+func (g *Graph) Components() (components [][]int) {
+	discovered := make([]bool, g.numOfVertices+1)
+	var component []int
+	processEarly := func(v int) {
+		discovered[v] = true
+		component = append(component, v)
+	}
+	for i := 1; i <= g.numOfVertices; i++ {
+		if !discovered[i] {
+			g.BFS(i, processEarly, nil, nil, nil)
+			components = append(components, make([]int, len(component)))
+			copy(components[len(components)-1][0:], component)
+			component = component[:0]
+		}
+	}
+	return
 }
 
 func (g *Graph) ToString() string {
