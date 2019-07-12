@@ -543,3 +543,14 @@ func dequeue(q *[]int) int {
 	*q = (*q)[1:]
 	return out
 }
+
+func push(q *[]int, id int) {
+	*q = append(*q, id)
+}
+
+func pop(q *[]int) int {
+	last := len(*q) - 1
+	v := (*q)[last]
+	*q = (*q)[:last]
+	return v
+}
