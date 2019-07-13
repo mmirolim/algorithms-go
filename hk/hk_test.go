@@ -217,3 +217,50 @@ func TestOrganizingContainersOfBalls(t *testing.T) {
 		checks.AssertEq(t, d.possible, out, caseStr(i))
 	}
 }
+
+func TestTheGridSearch(t *testing.T) {
+	data := []struct {
+		grid, pattern []string
+		found         bool
+	}{
+		{grid: []string{
+			"1234567890",
+			"0987654321",
+			"1111111111",
+			"1111111111",
+			"2222222222",
+		}, pattern: []string{"99", "99"}, found: false},
+		{grid: []string{
+			"1234567890",
+			"0987654321",
+			"1111111111",
+			"1111111111",
+			"2222222222",
+		}, pattern: []string{"876543", "111111", "111111"}, found: true},
+		{grid: []string{
+			"7283455864",
+			"6731158619",
+			"8988242643",
+			"3830589324",
+			"2229505813",
+			"5633845374",
+			"6473530293",
+			"7053106601",
+			"0834282956",
+			"4607924137",
+		}, pattern: []string{"9505", "3845", "3530"}, found: true},
+		{grid: []string{"999999", "121211"}, pattern: []string{"99", "11"}, found: true},
+		{grid: []string{
+			"111111111111111",
+			"111111111111111",
+			"111111011111111",
+			"111111111111111",
+			"111111111111111",
+		}, pattern: []string{"11111", "11111", "11110"}, found: true},
+	}
+
+	for i, d := range data {
+		out := TheGridSearch(d.grid, d.pattern)
+		checks.AssertEq(t, d.found, out, caseStr(i))
+	}
+}
