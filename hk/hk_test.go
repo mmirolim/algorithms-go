@@ -264,3 +264,22 @@ func TestTheGridSearch(t *testing.T) {
 		checks.AssertEq(t, d.found, out, caseStr(i))
 	}
 }
+
+func Test3DSurfaceArea(t *testing.T) {
+	data := []struct {
+		data [][]int32
+		area int
+	}{
+		{data: [][]int32{[]int32{1}}, area: 6},
+		{data: [][]int32{
+			[]int32{1, 3, 4},
+			[]int32{2, 2, 3},
+			[]int32{1, 2, 4},
+		}, area: 60},
+	}
+
+	for i, d := range data {
+		out := D3SurfaceArea(d.data)
+		checks.AssertEq(t, d.area, out, caseStr(i))
+	}
+}
