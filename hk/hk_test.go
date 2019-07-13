@@ -283,3 +283,17 @@ func Test3DSurfaceArea(t *testing.T) {
 		checks.AssertEq(t, d.area, out, caseStr(i))
 	}
 }
+
+func TestAbsolutePermutation(t *testing.T) {
+	data := []struct {
+		n, k int
+		perm []int
+	}{
+		{4, 2, []int{3, 4, 1, 2}}, {2, 1, []int{2, 1}}, {3, 0, []int{1, 2, 3}}, {3, 2, nil},
+	}
+
+	for i, d := range data {
+		out := AbsolutePermutation(d.n, d.k)
+		checks.AssertEq(t, d.perm, out, caseStr(i))
+	}
+}
