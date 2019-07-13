@@ -297,3 +297,37 @@ func TestAbsolutePermutation(t *testing.T) {
 		checks.AssertEq(t, d.perm, out, caseStr(i))
 	}
 }
+
+func TestTheBombermanGame(t *testing.T) {
+	data := []struct {
+		n         int
+		grid, out []string
+	}{
+		{n: 3, grid: []string{
+			".......",
+			"...O...",
+			"....O..",
+			".......",
+			"OO.....",
+			"OO.....",
+		}, out: []string{
+			"OOO.OOO",
+			"OO...OO",
+			"OOO...O",
+			"..OO.OO",
+			"...OOOO",
+			"...OOOO",
+		}},
+		{n: 181054341, grid: []string{
+			"O..OO........O..O........OO.O.OO.OO...O.....OOO...OO.O..OOOOO...O.O..O..O.O..OOO..O..O..O....O...O....O...O..O..O....O.O.O.O.....O.....OOOO..O......O.O.....OOO....OO....OO....O.O...O..OO....OO..O...O",
+		},
+			out: []string{
+				"OOOOO........OOOO........OOOOOOOOOO...O.....OOO...OOOOOOOOOOO...OOOOOOOOOOOOOOOOOOOOOOOOO....O...O....O...OOOOOOO....OOOOOOO.....O.....OOOOOOO......OOO.....OOO....OO....OO....OOO...OOOOO....OOOOO...O",
+			}},
+	}
+
+	for i, d := range data {
+		out := TheBombermanGame(d.n, d.grid)
+		checks.AssertEq(t, d.out, out, caseStr(i))
+	}
+}
