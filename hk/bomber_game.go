@@ -1,5 +1,8 @@
 package hk
 
+import "fmt"
+
+// https://www.hackerrank.com/challenges/bomber-man
 type BomberGame struct {
 	state [][]int
 }
@@ -83,15 +86,46 @@ func (g *BomberGame) Detonate(r, c int) {
 
 func TheBombermanGame(n int, grid []string) []string {
 	game := NewBomberGame(grid)
+	setBombState := game.ToString()
+	var detonated1, detonated2 []string
+	limit := n
+	if n > 5 {
+		limit = 5
+	}
 	t := 2
-	for t <= n {
+	for t <= limit {
 		if t%2 == 0 {
 			game.SetBombs(t)
+			setBombState = game.ToString()
 		}
-		if t&1 == 1 {
+		if t == 3 {
 			game.DetonateBombs(t)
+			detonated1 = game.ToString()
+		}
+		if t == 5 {
+			game.DetonateBombs(t)
+			detonated2 = game.ToString()
 		}
 		t++
 	}
-	return game.ToString()
+	if n < 5 {
+		return game.ToString()
+	}
+	if n%2 == 0 {
+		return setBombState
+	}
+	// check if a0 of arithmetic progression is 3
+	if n+1 == ((n+1)/4)*4 {
+		return detonated1
+	}
+
+	return detonated2
+}
+
+func (g *BomberGame) printGrid(t int) {
+	fmt.Printf("Time %d\n", t) // output for debug
+	for _, str := range g.ToString() {
+		fmt.Printf("%+v\n", str) // output for debug
+
+	}
 }
