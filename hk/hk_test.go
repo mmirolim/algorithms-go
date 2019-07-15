@@ -375,3 +375,67 @@ func TestAlmostSorted(t *testing.T) {
 		checks.AssertEq(t, d.res, out, caseStr(i))
 	}
 }
+
+func TestEmasSupercomputer(t *testing.T) {
+	data := []struct {
+		grid []string
+		res  int
+	}{
+		{grid: []string{
+			"GGGGGG",
+			"GBBBGB",
+			"GGGGGG",
+			"GGBBGB",
+			"GGGGGG",
+		}, res: 5},
+		{grid: []string{
+			"BGBBGB",
+			"GGGGGG",
+			"BGBBGB",
+			"GGGGGG",
+			"BGBBGB",
+			"BGBBGB",
+		}, res: 25},
+		{grid: []string{
+			"BBBBBGGBGG",
+			"GGGGGGGGGG",
+			"GGGGGGGGGG",
+			"BBBBBGGBGG",
+			"BBBBBGGBGG",
+			"GGGGGGGGGG",
+			"BBBBBGGBGG",
+			"GGGGGGGGGG",
+			"BBBBBGGBGG",
+			"GGGGGGGGGG",
+		}, res: 85},
+		{grid: []string{
+			"GGGGGGGGGGGG",
+			"GBGGBBBBBBBG",
+			"GBGGBBBBBBBG",
+			"GGGGGGGGGGGG",
+			"GGGGGGGGGGGG",
+			"GGGGGGGGGGGG",
+			"GGGGGGGGGGGG",
+			"GBGGBBBBBBBG",
+			"GBGGBBBBBBBG",
+			"GBGGBBBBBBBG",
+			"GGGGGGGGGGGG",
+			"GBGGBBBBBBBG",
+		}, res: 81},
+		{grid: []string{
+			"GGGGGGGGG",
+			"GBBBGGBGG",
+			"GBBBGGBGG",
+			"GBBBGGBGG",
+			"GBBBGGBGG",
+			"GBBBGGBGG",
+			"GBBBGGBGG",
+			"GGGGGGGGG",
+		}, res: 1},
+	}
+	for i, d := range data {
+		out := EmasSupercomputer(d.grid)
+		checks.AssertEq(t, d.res, out, caseStr(i))
+	}
+
+}
