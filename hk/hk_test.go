@@ -359,3 +359,19 @@ func _TestStringTransmission(t *testing.T) {
 		checks.AssertEq(t, d.res, out, caseStr(i))
 	}
 }
+
+func TestAlmostSorted(t *testing.T) {
+	data := []struct {
+		arr []int32
+		res string
+	}{
+		{[]int32{4, 2}, "swap 1 2"}, {[]int32{3, 1, 2}, ""}, {[]int32{1, 5, 4, 3, 2, 6}, "reverse 2 5"},
+		{[]int32{4, 2, 3, 1}, "swap 1 4"}, {[]int32{4, 3, 2, 1}, "reverse 1 4"},
+		{[]int32{4, 3, 2, 1, 5}, "reverse 1 4"}, {[]int32{1, 2, 4, 3, 5, 6}, "swap 3 4"},
+		{[]int32{1, 2, 3, 5, 4, 6}, "swap 4 5"}, {[]int32{43, 65, 1, 98, 99, 101}, ""},
+	}
+	for i, d := range data {
+		out := AlmostSorted(d.arr)
+		checks.AssertEq(t, d.res, out, caseStr(i))
+	}
+}
