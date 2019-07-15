@@ -439,3 +439,32 @@ func TestEmasSupercomputer(t *testing.T) {
 	}
 
 }
+
+func TestCountLuck(t *testing.T) {
+	data := []struct {
+		grid []string
+		k    int
+		res  bool
+	}{
+		{grid: []string{
+			"*.M",
+			".X.",
+		}, k: 1, res: true},
+		{grid: []string{
+			".X.X......X",
+			".X*.X.XXX.X",
+			".XX.X.XM...",
+			"......XXXX.",
+		}, k: 3, res: true},
+		{grid: []string{
+			".X.X......X",
+			".X*.X.XXX.X",
+			".XX.X.XM...",
+			"......XXXX.",
+		}, k: 4, res: false},
+	}
+	for i, d := range data {
+		out := CountLuck(d.k, d.grid)
+		checks.AssertEq(t, d.res, out, caseStr(i))
+	}
+}
