@@ -1,5 +1,7 @@
 package graph
 
+import "errors"
+
 func (g *Graph) BFS(
 	start int,
 	processEarly, processLate func(v int),
@@ -55,21 +57,39 @@ func (g *Graph) BFS(
 	}
 }
 
-//  entry/exitTime
+// entry/exitTime
 func (g *Graph) DFS(
 	start int,
 	processEarly,
 	processLate func(v int) error,
 	processEdge func(v, u int) error,
+	parent *[]int,
 ) error {
 
 	processed := make([]bool, g.numOfVertices+1)
 	discovered := make([]bool, g.numOfVertices+1)
-	parents := make([]int, g.numOfVertices+1)
 	entryTime := make([]int, g.numOfVertices+1)
 	exitTime := make([]int, g.numOfVertices+1)
 	time := 0
 	var queue []int
+	var par []int
+	if parent != nil {
+		if len(*parent) != g.numOfVertices+1 {
+			return errors.New("parent size should be number of vertices + 1")
+		}
+		par = *parent
+	} else {
+		par = make([]int, g.numOfVertices+1)
+	}
+	if processEarly == nil {
+		processEarly = func(v int) error { /* noop */ return nil }
+	}
+	if processLate == nil {
+		processLate = func(v int) error { /* noop */ return nil }
+	}
+	if processEdge == nil {
+		processEdge = func(v, u int) error { /* noop */ return nil }
+	}
 
 	discovered[start] = true
 	time++
@@ -78,11 +98,11 @@ func (g *Graph) DFS(
 	push(&queue, start)
 OUTER:
 	for len(queue) > 0 {
-		cur := pop(&queue)
+		cur := peek(&queue)
 		if g.edges[cur] != nil {
 			for edge := g.edges[cur].head; edge != nil; edge = edge.next {
 				next := edge.id
-				if parents[cur] == next {
+				if par[cur] == next {
 					// skip parent
 					continue
 				}
@@ -90,27 +110,28 @@ OUTER:
 					time++
 					entryTime[next] = time
 					discovered[next] = true
-					parents[next] = cur
+					par[next] = cur
 					if err := processEarly(next); err != nil {
 						return err
 					}
-					push(&queue, cur)
 					push(&queue, next)
 					if err := processEdge(cur, next); err != nil {
 						return err
 					}
 					continue OUTER
-				} else if !processed[next] || (g.IsDirected() && cur != parents[next]) {
+				} else if !processed[next] || (g.IsDirected() && cur != par[next]) {
 					if err := processEdge(cur, next); err != nil {
 						return err
 					}
 				}
 			}
 		}
+		cur = pop(&queue)
 		processLate(cur)
 		time++
 		exitTime[cur] = time
 		processed[cur] = true
 	}
+
 	return nil
 }

@@ -350,6 +350,24 @@ func (g *Graph) Bipartite() ([2][]int, bool) {
 	return out, bipartite
 }
 
+func FindPath(start, end int, parent []int) ([]int, error) {
+	var path []int
+	if end > len(parent)-1 {
+		return nil, errors.New("no end vertices in path")
+	}
+	count := 0
+	for start != end {
+		path = append(path, end)
+		end = parent[end]
+		count++
+		if count > len(parent) {
+			return nil, errors.New("path not found")
+		}
+	}
+	path = append(path, start)
+	return path, nil
+}
+
 func (g *Graph) ToString() string {
 	var str strings.Builder
 	str.WriteString(strconv.Itoa(g.numOfVertices))
@@ -553,4 +571,8 @@ func pop(q *[]int) int {
 	v := (*q)[last]
 	*q = (*q)[:last]
 	return v
+}
+
+func peek(q *[]int) int {
+	return (*q)[len(*q)-1]
 }
