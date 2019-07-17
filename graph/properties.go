@@ -142,7 +142,7 @@ func edgeClassification(
 	if processed[v2] && entryTime[v2] < entryTime[v1] {
 		return CrossEdge
 	}
-	fmt.Println("Warning: unclassified edge") // output for debug
+	fmt.Println("Warning: unclassified edge", v1, v2) // output for debug
 	return Unclassifiededge
 }
 
@@ -228,4 +228,39 @@ func (g *Graph) FindArticulations() ([][]int, error) {
 		}
 	}
 	return componentArticulations, nil
+}
+
+func (g *Graph) TopologicalSort() ([]int, error) {
+	if !g.isDirected {
+		return nil, errors.New("error graph is not directed")
+	}
+	var sorted []int
+	processLate := func(v int) error {
+		sorted = append(sorted, v)
+		return nil
+	}
+	discovered, processed := g.vertexFlagStorage(), g.vertexFlagStorage()
+	parent, entryTime := g.vertexStorage(), g.vertexStorage()
+	processEdge := func(v1, v2 int) error {
+		if BackEdge == edgeClassification(v1, v2, discovered, processed, parent, entryTime) {
+			return errors.New("error directed cycle found, not a DAG")
+
+		}
+		return nil
+	}
+	for _, v := range g.Vertices() {
+		if !discovered[v] {
+			err := g.DFS(v, nil, processLate, processEdge,
+				&parent, &entryTime, nil, &discovered, &processed)
+			if err != nil {
+				return nil, err
+			}
+			for i := range entryTime {
+				entryTime[i] = 0
+				parent[i] = 0
+			}
+		}
+	}
+
+	return sorted, nil
 }
