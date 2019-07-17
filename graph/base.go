@@ -287,6 +287,16 @@ func (g *Graph) isSameEdge(v1, v2 int, m map[int]map[int]bool) bool {
 	return false
 }
 
+func (g *Graph) vertexStorage() []int {
+	// sync pool can be used
+	return make([]int, g.numOfVertices+1)
+}
+
+func (g *Graph) vertexFlagStorage() []bool {
+	// sync pool can be used
+	return make([]bool, g.numOfVertices+1)
+}
+
 func (g *Graph) ToString() string {
 	var str strings.Builder
 	str.WriteString(strconv.Itoa(g.numOfVertices))

@@ -1,6 +1,9 @@
 package graph
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var ErrFinished = errors.New("finished")
 
@@ -21,7 +24,8 @@ func (g *Graph) FindCycle(start int) ([]int, error) {
 		return nil
 	}
 
-	err := g.DFS(start, processEarly, processLate, processEdge, &parent)
+	err := g.DFS(start, processEarly, processLate, processEdge,
+		&parent, nil, nil, nil, nil)
 	if err == ErrFinished {
 		return path, nil
 	}
@@ -107,4 +111,121 @@ func FindPath(start, end int, parent []int) ([]int, error) {
 	}
 	path = append(path, start)
 	return path, nil
+}
+
+type edgeType int
+
+var (
+	Unclassifiededge edgeType = 0
+	TreeEdge         edgeType = 1
+	BackEdge         edgeType = 2
+	ForwardEdge      edgeType = 3
+	CrossEdge        edgeType = 4
+)
+
+func edgeClassification(
+	v1, v2 int,
+	discovered []bool,
+	processed []bool,
+	parent []int,
+	entryTime []int) edgeType {
+	if parent[v2] == v1 {
+		return TreeEdge
+	}
+	if discovered[v2] && !processed[v2] {
+		return BackEdge
+	}
+	if processed[v2] && entryTime[v2] > entryTime[v1] {
+		return ForwardEdge
+	}
+
+	if processed[v2] && entryTime[v2] < entryTime[v1] {
+		return CrossEdge
+	}
+	fmt.Println("Warning: unclassified edge") // output for debug
+	return Unclassifiededge
+}
+
+func (g *Graph) FindArticulations() ([][]int, error) {
+	if g.isDirected {
+		return nil, errors.New("error graph is directed")
+	}
+	var articulations []int
+	reachableAncestor := g.vertexStorage()
+	treeOutDegree := g.vertexStorage()
+	discovered := g.vertexFlagStorage()
+	processed := g.vertexFlagStorage()
+	entryTime := g.vertexStorage()
+	parent := g.vertexStorage()
+
+	processEarly := func(v int) error {
+		reachableAncestor[v] = v
+		return nil
+	}
+	processEdge := func(v1, v2 int) error {
+		edgeClass := edgeClassification(v1, v2, discovered, processed, parent, entryTime)
+		if edgeClass == TreeEdge {
+			treeOutDegree[v1]++
+		}
+		if edgeClass == BackEdge && parent[v1] != v2 {
+			if entryTime[v2] < entryTime[reachableAncestor[v1]] {
+				reachableAncestor[v1] = v2
+			}
+		}
+		if edgeClass == Unclassifiededge {
+			return errors.New("error unclassified edge")
+		}
+		return nil
+	}
+	processLate := func(v int) error {
+		// is it root vertex
+		isRoot := false
+		// earliest entry time reachable vertex
+		var earliestReachableTime int
+		var earliestReachableParentTime int
+		if parent[v] < 1 {
+			// possible root
+			if treeOutDegree[v] > 1 {
+				// Root articulation vertex
+				articulations = append(articulations, v)
+			}
+			return nil
+		}
+		isRoot = parent[parent[v]] < 1
+
+		if reachableAncestor[v] == parent[v] && !isRoot {
+			// Parent articulation vertex
+			articulations = append(articulations, parent[v])
+		}
+		if reachableAncestor[v] == v {
+			// Bridge articulation vertex
+			articulations = append(articulations, parent[v])
+			if treeOutDegree[v] > 0 {
+				// vertex is a list ?
+				// Bridge articulation vertex
+				articulations = append(articulations, v)
+			}
+		}
+		earliestReachableTime = entryTime[reachableAncestor[v]]
+		earliestReachableParentTime = entryTime[reachableAncestor[parent[v]]]
+		if earliestReachableTime < earliestReachableParentTime {
+			reachableAncestor[parent[v]] = reachableAncestor[v]
+		}
+		return nil
+	}
+	var componentArticulations [][]int
+	for _, v := range g.Vertices() {
+		if !discovered[v] {
+			g.DFS(v, processEarly, processLate, processEdge,
+				&parent, &entryTime, nil,
+				&discovered, &processed)
+
+			if len(articulations) > 0 {
+				componentArticulations = append(componentArticulations, articulations)
+				articulations = make([]int, 0, len(articulations))
+			}
+
+		}
+	}
+	return componentArticulations, nil
 }

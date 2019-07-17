@@ -1,6 +1,8 @@
 package graph
 
-import "errors"
+import (
+	"errors"
+)
 
 func (g *Graph) BFS(
 	start int,
@@ -9,10 +11,10 @@ func (g *Graph) BFS(
 	parents *[]int,
 ) {
 	// init
-	discovered := make([]bool, g.numOfVertices+1)
-	processed := make([]bool, g.numOfVertices+1)
+	discovered := g.vertexFlagStorage()
+	processed := g.vertexFlagStorage()
 	if parents != nil {
-		*parents = make([]int, g.numOfVertices+1)
+		*parents = g.vertexStorage()
 	}
 	if processEarly == nil {
 		processEarly = func(v int) { /* noop */ }
@@ -57,30 +59,46 @@ func (g *Graph) BFS(
 	}
 }
 
-// entry/exitTime
 func (g *Graph) DFS(
 	start int,
 	processEarly,
 	processLate func(v int) error,
 	processEdge func(v, u int) error,
-	parent *[]int,
+	parent, entryTime, exitTime *[]int,
+	discovered, processed *[]bool,
 ) error {
-
-	processed := make([]bool, g.numOfVertices+1)
-	discovered := make([]bool, g.numOfVertices+1)
-	entryTime := make([]int, g.numOfVertices+1)
-	exitTime := make([]int, g.numOfVertices+1)
 	time := 0
 	var queue []int
-	var par []int
-	if parent != nil {
-		if len(*parent) != g.numOfVertices+1 {
-			return errors.New("parent size should be number of vertices + 1")
+	var par, entryT, exitT []int
+	var procEd, disEd []bool
+
+	for _, sl := range []struct {
+		s1 *[]bool
+		s2 *[]bool
+	}{{&procEd, processed}, {&disEd, discovered}} {
+		if sl.s2 != nil {
+			if len(*sl.s2) != g.numOfVertices+1 {
+				return errors.New("provided size should be number of vertices + 1")
+			}
+			*sl.s1 = *sl.s2
+		} else {
+			*sl.s1 = g.vertexFlagStorage()
 		}
-		par = *parent
-	} else {
-		par = make([]int, g.numOfVertices+1)
 	}
+	for _, sl := range []struct {
+		s1 *[]int
+		s2 *[]int
+	}{{&par, parent}, {&entryT, entryTime}, {&exitT, exitTime}} {
+		if sl.s2 != nil {
+			if len(*sl.s2) != g.numOfVertices+1 {
+				return errors.New("provided size should be number of vertices + 1")
+			}
+			*sl.s1 = *sl.s2
+		} else {
+			*sl.s1 = g.vertexStorage()
+		}
+	}
+
 	if processEarly == nil {
 		processEarly = func(v int) error { /* noop */ return nil }
 	}
@@ -91,9 +109,9 @@ func (g *Graph) DFS(
 		processEdge = func(v, u int) error { /* noop */ return nil }
 	}
 
-	discovered[start] = true
+	disEd[start] = true
 	time++
-	entryTime[start] = time
+	entryT[start] = time
 	processEarly(start)
 	push(&queue, start)
 OUTER:
@@ -106,10 +124,10 @@ OUTER:
 					// skip parent
 					continue
 				}
-				if !discovered[next] {
+				if !disEd[next] {
 					time++
-					entryTime[next] = time
-					discovered[next] = true
+					entryT[next] = time
+					disEd[next] = true
 					par[next] = cur
 					if err := processEarly(next); err != nil {
 						return err
@@ -119,7 +137,7 @@ OUTER:
 						return err
 					}
 					continue OUTER
-				} else if !processed[next] || (g.IsDirected() && cur != par[next]) {
+				} else if !procEd[next] || (g.IsDirected() && cur != par[next]) {
 					if err := processEdge(cur, next); err != nil {
 						return err
 					}
@@ -129,8 +147,8 @@ OUTER:
 		cur = pop(&queue)
 		processLate(cur)
 		time++
-		exitTime[cur] = time
-		processed[cur] = true
+		exitT[cur] = time
+		procEd[cur] = true
 	}
 
 	return nil

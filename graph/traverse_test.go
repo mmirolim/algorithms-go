@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/mmirolim/algos/checks"
@@ -50,7 +49,7 @@ func TestBFS(t *testing.T) {
 }
 
 func TestDFS(t *testing.T) {
-	var visitOrder, parents []int
+	var visitOrder []int
 	processEarly := func(v int) error {
 		visitOrder = append(visitOrder, v)
 		return nil
@@ -80,44 +79,17 @@ func TestDFS(t *testing.T) {
 	}
 	for i, d := range data {
 		countEdge = 0
-		visitOrder, parents = visitOrder[:0], parents[:0]
+		visitOrder = visitOrder[:0]
 		g, err := NewGraphFrom(d.graph)
 		if err != nil {
 			t.Errorf("case [%d] NewGraphFrom unexpected err %+v", i, err)
 			continue
 		}
-		g.DFS(d.start, processEarly, processLate, processEdge, nil)
+		g.DFS(d.start, processEarly, processLate, processEdge,
+			nil, nil, nil, nil, nil)
 
 		checks.AssertEq(t, d.edgesNumber, countEdge, caseStr(i))
 		checks.AssertEq(t, d.expectedOrder, visitOrder, caseStr(i))
-
-	}
-}
-
-func TestFindGraphCycle(t *testing.T) {
-	data := []struct {
-		graph string
-		start int
-		path  []int
-		err   error
-	}{
-		{graphDataDirectedWeightedWithCodes, 1, nil, errors.New("path not found")},
-		// vertex with no edges
-		{graphDataDirectedWeightedWithCodes, 5, nil, nil},
-		{twoRhombus, 1, []int{2, 4, 3, 1}, nil},
-		// // going from highest degree vertex
-		{twoRhombus, 4, []int{3, 1, 2, 4}, nil},
-	}
-	for i, d := range data {
-		g, err := NewGraphFrom(d.graph)
-		if err != nil {
-			t.Errorf("case [%d] NewGraphFrom unexpected err %+v", i, err)
-			continue
-		}
-
-		path, err := g.FindCycle(d.start)
-		checks.AssertEqErr(t, d.err, err, caseStr(i))
-		checks.AssertEq(t, d.path, path, caseStr(i))
 
 	}
 }
