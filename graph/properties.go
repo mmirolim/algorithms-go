@@ -264,3 +264,72 @@ func (g *Graph) TopologicalSort() ([]int, error) {
 
 	return sorted, nil
 }
+
+func (g *Graph) StrongComponents() []int {
+	if !g.isDirected {
+		return nil
+	}
+	// strong component number for each vertex
+	scc := g.vertexStorage()
+	// oldest vertex surely in component of v
+	low := g.vertexStorage()
+	for i := range low {
+		low[i] = i
+	}
+	discovered, processed := g.vertexFlagStorage(), g.vertexFlagStorage()
+	parent, entryTime := g.vertexStorage(), g.vertexStorage()
+	countComponents := 0
+	var stack []int
+	processEarly := func(v int) error {
+		push(&stack, v)
+		return nil
+	}
+	popComponent := func(v int) {
+		countComponents++
+		scc[v] = countComponents
+		for {
+			t := pop(&stack)
+			if t == v {
+				break
+			}
+			scc[t] = countComponents
+		}
+	}
+
+	processlate := func(v int) error {
+		if low[v] == v {
+			// edge parent[v], v cuts off scc
+			popComponent(v)
+		}
+		if entryTime[low[v]] < entryTime[low[parent[v]]] {
+			low[parent[v]] = low[v]
+		}
+		return nil
+	}
+
+	processEdge := func(v1, v2 int) error {
+		class := edgeClassification(v1, v2, discovered, processed, parent, entryTime)
+
+		if class == BackEdge {
+			if entryTime[v2] < entryTime[low[v1]] {
+				low[v1] = v2
+			}
+		}
+		if class == CrossEdge {
+			if scc[v2] == 0 { // component not yet assigned
+				if entryTime[v2] < entryTime[low[v1]] {
+					low[v1] = v2
+				}
+			}
+		}
+		return nil
+	}
+	for _, v := range g.Vertices() {
+		if !discovered[v] {
+			g.DFS(v,
+				processEarly, processlate, processEdge,
+				&parent, &entryTime, nil, &discovered, &processed)
+		}
+	}
+	return scc
+}

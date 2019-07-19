@@ -190,6 +190,38 @@ func TestTopologicalSort(t *testing.T) {
 		out, err := g.TopologicalSort()
 		checks.AssertEqErr(t, d.err, err, caseStr(i))
 		checks.AssertEq(t, d.sorted, out, caseStr(i))
+	}
+}
 
+func TestStrongComponents(t *testing.T) {
+	graph1 := `8 12 directed
+1 2
+2 3
+3 1
+4 1
+2 4
+2 5
+4 8
+4 6
+6 7
+7 5
+5 6
+8 6
+`
+	data := []struct {
+		graph string
+		scc   []int
+	}{
+		{graph1, []int{0, 3, 3, 3, 3, 1, 1, 1, 2}},
+	}
+	for i, d := range data {
+		g, err := NewGraphFrom(d.graph)
+		if err != nil {
+			t.Errorf("case [%d] NewGraphFrom unexpected err %+v", i, err)
+			continue
+		}
+
+		out := g.StrongComponents()
+		checks.AssertEq(t, d.scc, out, caseStr(i))
 	}
 }
