@@ -174,6 +174,33 @@ func (t *Tree) Reverse() {
 	}
 }
 
+func (t *Tree) FindIthNodeInOrder(i int) int {
+	if i < 0 {
+		panic("ith is negative")
+	}
+	res := 0
+	count := -1
+	var recur func(n *Tree)
+	recur = func(n *Tree) {
+		if n == nil || count == i {
+			return
+		}
+
+		recur(n.left)
+		count++
+		if count == i {
+			res = n.val
+			return
+		}
+		recur(n.right)
+	}
+	recur(t)
+	if count < i {
+		panic("ith is too big")
+	}
+	return res
+}
+
 type queue struct {
 	store []*Tree
 }

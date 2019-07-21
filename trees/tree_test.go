@@ -1,7 +1,10 @@
 package tree
 
 import (
+	"strconv"
 	"testing"
+
+	"github.com/mmirolim/algos/checks"
 )
 
 var treeMirrorTestData = []struct {
@@ -349,4 +352,58 @@ func TestTreesEqual(t *testing.T) {
 		}
 	}
 
+}
+
+func TestTreeReturnIthNodeInSortedOrder(t *testing.T) {
+	data := []struct {
+		tr  *Tree
+		i   int
+		out int
+	}{
+		{tr: &Tree{
+			val: 5,
+			left: &Tree{
+				val:  2,
+				left: nil,
+				right: &Tree{
+					val:   3,
+					left:  nil,
+					right: &Tree{val: 4},
+				},
+			},
+			right: nil},
+			i: 3, out: 5},
+		{tr: &Tree{
+			val: 5,
+			left: &Tree{
+				val:  2,
+				left: nil,
+				right: &Tree{
+					val:   3,
+					left:  nil,
+					right: &Tree{val: 4},
+				},
+			},
+			right: &Tree{
+				val: 7,
+				left: &Tree{
+					val:  6,
+					left: nil, right: nil,
+				},
+				right: &Tree{
+					val:  8,
+					left: nil, right: nil,
+				},
+			}},
+			i: 4, out: 6},
+	}
+	for i, d := range data {
+		out := d.tr.FindIthNodeInOrder(d.i)
+		checks.AssertEq(t, d.out, out, caseStr(i))
+	}
+
+}
+
+func caseStr(i int) string {
+	return "case [" + strconv.Itoa(i) + "]"
 }
