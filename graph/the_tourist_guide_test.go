@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/mmirolim/algos/checks"
+	tree "github.com/mmirolim/algos/trees"
 )
 
 /*
@@ -11,7 +12,7 @@ import (
 PC/UVa IDs: 110903/10099, Popularity: B, Success rate: average Level: 3
 */
 func TestTouristGuide(t *testing.T) {
-	cityMap := `7 10 weighted
+	cityMap1 := `7 10 weighted
 1 2 30
 1 3 15
 1 4 10
@@ -23,21 +24,33 @@ func TestTouristGuide(t *testing.T) {
 5 7 20
 6 7 30
 `
+	cityMap2 := `3 2 weighted
+1 2 15
+2 3 10`
 	data := []struct {
 		start, end    int
 		cityMap       string
 		numOfTourists int
 		numOfTrips    int
+		solverName    string
+		solver        func(start, end, numOfTourist int, cityMap string) int
 	}{
-		{start: 1, end: 7, cityMap: cityMap, numOfTourists: 99, numOfTrips: 5},
+		{start: 1, end: 7, cityMap: cityMap1, numOfTourists: 99, numOfTrips: 5,
+			solverName: "TheTouristGuideSolveByFindingAllPaths", solver: TheTouristGuideSolveByFindingAllPaths},
+		{start: 1, end: 7, cityMap: cityMap1, numOfTourists: 99, numOfTrips: 5,
+			solverName: "TheTouristGuideSolveByFindingSpanningTree", solver: TheTouristGuideSolveByFindingSpanningTree},
+		{start: 1, end: 3, cityMap: cityMap2, numOfTourists: 30, numOfTrips: 4,
+			solverName: "TheTouristGuideSolveByFindingAllPaths", solver: TheTouristGuideSolveByFindingAllPaths},
+		{start: 1, end: 3, cityMap: cityMap2, numOfTourists: 30, numOfTrips: 4,
+			solverName: "TheTouristGuideSolveByFindingSpanningTree", solver: TheTouristGuideSolveByFindingSpanningTree},
 	}
 	for i, d := range data {
-		out := TheTouristGuide(d.start, d.end, d.numOfTourists, d.cityMap)
+		out := d.solver(d.start, d.end, d.numOfTourists, d.cityMap)
 		checks.AssertEq(t, d.numOfTrips, out, caseStr(i))
 	}
 }
 
-func TheTouristGuide(start, end, numOfTourist int, cityMap string) int {
+func TheTouristGuideSolveByFindingAllPaths(start, end, numOfTourist int, cityMap string) int {
 	var paths [][]int
 	cityGraph, err := NewGraphFrom(cityMap)
 	if err != nil {
@@ -112,6 +125,7 @@ func TheTouristGuide(start, end, numOfTourist int, cityMap string) int {
 		}
 		if maxMin < min {
 			maxMin = min
+			// minus because Guide will go with each group
 			if numOfTourist%(maxMin-1) == 0 {
 				minTrips = numOfTourist / (maxMin - 1)
 			} else {
@@ -121,4 +135,55 @@ func TheTouristGuide(start, end, numOfTourist int, cityMap string) int {
 		}
 	}
 	return minTrips
+}
+
+func TheTouristGuideSolveByFindingSpanningTree(start, end, numOfTourist int, cityMap string) int {
+	cityGraph, err := NewGraphFrom(cityMap)
+	if err != nil {
+		panic(err)
+	}
+	priorityQ, err := tree.NewMaxHeap(-1)
+	if err != nil {
+		panic(err)
+	}
+	alreadyInTree := make([]bool, cityGraph.NumOfVertices()+1)
+	// val is max weight to edge
+	Tree := make([]int, cityGraph.NumOfVertices()+1)
+	// find spanning tree of graph with max weight
+	edges := map[int][][3]int{}
+	for _, e := range cityGraph.EdgesWithWeights() {
+		edges[e[0]] = append(edges[e[0]], e)
+	}
+	for _, e := range edges[start] {
+		priorityQ.Insert(e[2], e)
+	}
+	min := func(a, b int) int {
+		if a < b {
+			return a
+		}
+		return b
+	}
+	Tree[start] = numOfTourist
+	alreadyInTree[start] = true
+	for !priorityQ.IsEmpty() {
+		_, data, err := priorityQ.ExtractTop()
+		if err != nil {
+			panic(err)
+		}
+		edge := data.([3]int)
+		if !alreadyInTree[edge[1]] {
+			alreadyInTree[edge[1]] = true
+			Tree[edge[1]] = min(Tree[edge[0]], edge[2])
+			for _, e := range edges[edge[1]] {
+				priorityQ.Insert(e[2], e)
+			}
+		}
+	}
+	// minus because Guide will go with each group
+	numOfTrips := numOfTourist / (Tree[end] - 1)
+	if numOfTourist%(Tree[end]-1) != 0 {
+		numOfTrips++
+	}
+
+	return numOfTrips
 }
