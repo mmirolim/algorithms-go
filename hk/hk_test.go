@@ -504,3 +504,18 @@ func TestJourneyToTheMoon(t *testing.T) {
 		checks.AssertEq(t, d.numOfPossiblePairs, out, caseStr(i))
 	}
 }
+
+func TestBFSShortestReach(t *testing.T) {
+	data := []struct {
+		startNode, numOfNodes int32
+		edges                 [][]int32
+		shortestReach         []int32
+	}{
+		{1, 4, [][]int32{[]int32{1, 2}, []int32{1, 3}}, []int32{6, 6, -1}},
+		{2, 3, [][]int32{[]int32{2, 3}}, []int32{-1, 6}},
+	}
+	for i, d := range data {
+		out := BFSShortestReach(d.numOfNodes, int32(len(d.edges)), d.edges, d.startNode)
+		checks.AssertEq(t, d.shortestReach, out, caseStr(i))
+	}
+}
