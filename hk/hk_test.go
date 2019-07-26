@@ -468,3 +468,19 @@ func TestCountLuck(t *testing.T) {
 		checks.AssertEq(t, d.res, out, caseStr(i))
 	}
 }
+
+func TestJimAndTheOrders(t *testing.T) {
+	data := []struct {
+		orders        [][]int32
+		customerOrder []int32
+	}{
+		{orders: [][]int32{[]int32{1, 3}, []int32{2, 3}, []int32{3, 3}},
+			customerOrder: []int32{1, 2, 3}},
+		{orders: [][]int32{[]int32{8, 1}, []int32{4, 2}, []int32{5, 6}, []int32{3, 1}, []int32{4, 3}},
+			customerOrder: []int32{4, 2, 5, 1, 3}},
+	}
+	for i, d := range data {
+		out := JimOrders(d.orders)
+		checks.AssertEq(t, d.customerOrder, out, caseStr(i))
+	}
+}
