@@ -519,3 +519,17 @@ func TestBFSShortestReach(t *testing.T) {
 		checks.AssertEq(t, d.shortestReach, out, caseStr(i))
 	}
 }
+
+func TestSubsetComponentCount(t *testing.T) {
+	data := []struct {
+		arr             []int64
+		numOfComponents int
+	}{
+		{[]int64{2, 5, 9}, 504},
+		{[]int64{7657996191170792405, 823521775386674036, 7964859986384396722, 7069126185552683547, 8844240618316520467, 8575028893511060997, 3915512292454610165, 7977543474609536113, 2754940443984941722, 1332946190697636242, 6930671555697065690, 8837678051719804556, 4624735878969690657, 6407543802015707246, 6302239625781485960, 5151345807274817083}, 185863},
+	}
+	for i, d := range data {
+		out := SubsetComponentCountUsingBitCounting(d.arr)
+		checks.AssertEq(t, d.numOfComponents, out, caseStr(i))
+	}
+}
