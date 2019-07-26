@@ -484,3 +484,23 @@ func TestJimAndTheOrders(t *testing.T) {
 		checks.AssertEq(t, d.customerOrder, out, caseStr(i))
 	}
 }
+
+func TestJourneyToTheMoon(t *testing.T) {
+	data := []struct {
+		numOfAstronauts    int32
+		astroPairs         [][]int32
+		numOfPossiblePairs int
+	}{
+		{numOfAstronauts: 5, astroPairs: [][]int32{[]int32{0, 1}, []int32{2, 3}, []int32{0, 4}}, numOfPossiblePairs: 6},
+		{numOfAstronauts: 4, astroPairs: [][]int32{[]int32{0, 2}}, numOfPossiblePairs: 5},
+		{numOfAstronauts: 10, astroPairs: [][]int32{[]int32{0, 2}, []int32{1, 8}, []int32{1, 4}, []int32{2, 8}, []int32{2, 6}, []int32{3, 5}, []int32{6, 9}},
+			numOfPossiblePairs: 23},
+		// slow case
+		{numOfAstronauts: 100000, astroPairs: [][]int32{[]int32{1, 2}, []int32{3, 4}},
+			numOfPossiblePairs: 4999949998},
+	}
+	for i, d := range data {
+		out := JourneyToTheMoon(d.numOfAstronauts, d.astroPairs)
+		checks.AssertEq(t, d.numOfPossiblePairs, out, caseStr(i))
+	}
+}
