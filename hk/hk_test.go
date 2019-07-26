@@ -533,3 +533,17 @@ func TestSubsetComponentCount(t *testing.T) {
 		checks.AssertEq(t, d.numOfComponents, out, caseStr(i))
 	}
 }
+
+func TestPrimsSpecialSubtree(t *testing.T) {
+	data := []struct {
+		n, start, minSumWeight int32
+		edges                  [][]int32
+	}{
+		{n: 3, start: 1, minSumWeight: 4, edges: [][]int32{[]int32{1, 2, 2}, []int32{1, 3, 3}, []int32{2, 3, 2}}},
+		{n: 5, start: 1, minSumWeight: 15, edges: [][]int32{[]int32{1, 2, 3}, []int32{1, 3, 4}, []int32{4, 2, 6}, []int32{5, 2, 2}, []int32{2, 3, 5}, []int32{3, 5, 7}}},
+	}
+	for i, d := range data {
+		out := PrimsSpecialSubtree(d.n, d.start, d.edges)
+		checks.AssertEq(t, d.minSumWeight, out, caseStr(i))
+	}
+}
