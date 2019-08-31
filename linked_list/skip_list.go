@@ -2,22 +2,25 @@ package linked_list
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"strings"
 )
 
+const promoteChance = 0.5
+
 type SkipList struct {
+	size  uint64
 	lines []*sknode
 	p     float64
 	lpath *sknodeStack
 }
 
 type sknode struct {
-	k          int64
-	v          interface{}
-	prev, next *sknode
-	nextl      *sknode
+	k            int64
+	v            interface{}
+	prev, next   *sknode
+	dist         uint64
+	nextl, prevl *sknode
 }
 
 // reset pointer for GC
@@ -29,29 +32,22 @@ func (n *sknode) reset() {
 
 // NewSkipList create new skip list
 // TODO seed rand and separate generator
-// TODO smallest k is -math.MaxInt32
-func NewSkipList(p float64) *SkipList {
-	if p < 0 || p >= 1.0 {
-		panic("invalid p argument should be [0, 1.0)")
-	}
+func NewSkipList() *SkipList {
 	lines := make([]*sknode, 1, 10)
-	lines[0] = &sknode{k: -math.MaxInt64, v: nil, prev: nil, next: nil, nextl: nil}
-	return &SkipList{lines, p, &sknodeStack{}}
+	lines[0] = &sknode{}
+	return &SkipList{0, lines, promoteChance, &sknodeStack{}}
 }
-func (sl *SkipList) count(node *sknode) int {
-	count := 0
+
+func (sl *SkipList) count(node *sknode) uint64 {
+	var count uint64
 	for start := node; start != nil; start = start.next {
 		count++
 	}
 	return count
 }
 
-func (sl *SkipList) Count() int {
-	count := sl.count(sl.lines[0])
-	if sl.lines[0].v != nil {
-		return count
-	}
-	return count - 1
+func (sl *SkipList) Count() uint64 {
+	return sl.size
 }
 
 // Insert new element to list with k key and v data
@@ -59,21 +55,36 @@ func (sl *SkipList) Insert(key int, v interface{}) {
 	k := int64(key)
 	sl.lpath.reset()
 	nnode := &sknode{k: k, v: v, next: nil, nextl: nil}
-	node := sl.findNode(k)
+	node, pos := sl.findNode(k)
 	// insert to base line
-	if node.k == k {
+	if node.v != nil && node.k == k { // skip head
 		// update
 		node.v = v
 		return
 	}
-
+	sl.size++
+	nnode.dist = 1
 	connectNodes(&node, &nnode)
-	sl.promote(nnode)
+	sl.promote(nnode, pos+1)
+	updateDist(nnode) // promote then update
+}
+
+// TODO remove dist logic from promote, use just updateDist
+func updateDist(node *sknode) {
+	for ; node.prevl != nil; node = node.prevl {
+	}
+	for node = node.next; node != nil; node = node.next {
+		for clmnode := node.prevl; clmnode != nil; clmnode = clmnode.prevl {
+			clmnode.dist++
+			node = clmnode
+		}
+
+	}
 }
 
 func (sl *SkipList) Find(key int) (bool, interface{}) {
 	k := int64(key)
-	node := sl.findNode(k)
+	node, _ := sl.findNode(k)
 	if node.k == k {
 		return true, node.v
 	}
@@ -83,55 +94,90 @@ func (sl *SkipList) Find(key int) (bool, interface{}) {
 func (sl *SkipList) Delete(key int) {
 	k := int64(key)
 	sl.lpath.reset()
-	node := sl.findNode(k)
+	node, _ := sl.findNode(k) // TODO update pos
 	if node.k != k {
 		return // not found
 	}
-	// special case, don't delete just clear val
-	if node.k == -math.MaxInt64 {
-		node.v = nil
-		return
-	}
-
+	sl.size--
 	// detach deleted node from list
-	detachNode(node)
-	prevl := sl.lpath.pop()
+	detachNode(node, true)
+	prevl, _ := sl.lpath.pop()
 	if prevl.k == k { // delete column of deleted node
-		for ; prevl != nil && prevl.k == k; prevl = sl.lpath.pop() {
-			detachNode(prevl)
+		for ; prevl != nil && prevl.k == k; prevl, _ = sl.lpath.pop() {
+			detachNode(prevl, false)
 			node.reset()
 		}
 	}
 	node.reset()
 }
 
-func (sl *SkipList) findNode(k int64) *sknode {
+// returns node and its position
+func (sl *SkipList) findNode(k int64) (*sknode, uint64) {
+	var pos uint64
+	start := sl.lines[len(sl.lines)-1]
+	if start.next != nil {
+		pos += start.next.dist - 1 // pos starts from 0
+	}
 	for l := len(sl.lines) - 1; l >= 0; l-- {
 		// find where to change lines
-		start := sl.lines[l]
 		for ; start.next != nil && start.next.k <= k; start = start.next {
+			pos += start.next.dist
 		}
 		if start.nextl == nil {
-			// base line
-			return start
+			return start, pos
 		}
-		sl.lpath.push(start)
+		sl.lpath.push(start, pos)
+		start = start.nextl // change line
 	}
-	return nil
+	return nil, pos
 }
 
-func (sl *SkipList) promote(basenode *sknode) {
+// GetByIndex return value at pos, starts from 1
+// or false and nil if out of range
+func (sl *SkipList) GetByIndex(pos uint64) (bool, interface{}) {
+	if pos == 0 || pos >= sl.size {
+		return false, nil
+	}
+	start := sl.lines[len(sl.lines)-1]
+	for l := len(sl.lines) - 1; l >= 0; l-- {
+		// find where to change lines
+		for ; start.next != nil && pos >= start.next.dist && pos-start.next.dist >= 0; start = start.next {
+			pos -= start.next.dist
+
+		}
+		if start.nextl == nil {
+			return true, start.v
+		}
+		sl.lpath.push(start, pos)
+		start = start.nextl // change line
+	}
+	return false, nil
+}
+
+func (sl *SkipList) promote(basenode *sknode, pos uint64) {
 	node := basenode
 	for {
 		// TODO use separate generator
 		if rand.Float64() < sl.p {
-			node = &sknode{k: basenode.k, v: nil, next: nil, nextl: node}
-			prevLn := sl.lpath.pop()
+			nnode := &sknode{}
+			nnode.k = basenode.k
+			nnode.nextl = node
+			node.prevl = nnode
+			prevLn, prevpos := sl.lpath.pop()
 			if prevLn == nil {
 				// add new express line
 				prevLn = sl.addNewExpressLine()
+				nnode.dist = pos
+			} else {
+				// update distances between nodes
+				nnode.dist = pos - prevpos
+				if prevLn.next != nil {
+					prevLn.next.dist = prevLn.next.dist - nnode.dist + 1
+
+				}
 			}
-			connectNodes(&prevLn, &node)
+			connectNodes(&prevLn, &nnode)
+			node = nnode
 			continue
 		}
 		// reset path
@@ -153,9 +199,12 @@ func connectNodes(node, next **sknode) {
 }
 
 // double link prev<->node<->next => prev<->next
-func detachNode(node *sknode) {
+func detachNode(node *sknode, baselvl bool) {
 	node.prev.next = node.next
 	if node.next != nil {
+		if !baselvl {
+			node.next.dist += node.next.dist + node.dist
+		}
 		node.next.prev = node.prev
 	}
 }
@@ -168,34 +217,26 @@ func (sl *SkipList) addNewExpressLine() *sknode {
 
 func (sl *SkipList) newStartNode() *sknode {
 	return &sknode{
-		k: -math.MaxInt64, v: nil,
+		k: 0, v: nil,
 		next: nil, nextl: sl.lines[len(sl.lines)-1]}
 }
 
 // TODO add debug version
 func (sl *SkipList) ToString() string {
 	var str strings.Builder
-	basecount := 0
-	start := sl.lines[0]
-	basespace := 5
-	str.WriteString("head>")
-	str.WriteString(">")
-	for ; start != nil; start = start.next {
-		str.WriteString(fmt.Sprintf("{%d, %v}", start.k, start.v))
-		str.WriteString(strings.Repeat("-", basespace))
-		str.WriteByte('>')
-		basecount++
-	}
-	str.WriteString("nil\n")
-	for i := 1; i < len(sl.lines); i++ {
+	basecount := sl.size
+	var start *sknode
+	var basespace uint64 = 5
+
+	for i := 0; i < len(sl.lines); i++ {
 		start = sl.lines[i]
-		count := sl.count(start)
-		space := basecount * basespace / count
+		var count uint64 = sl.count(start)
+		var space uint64 = basecount * basespace / count
 		str.WriteString("head>")
 		str.WriteString(">")
 		for ; start != nil; start = start.next {
-			str.WriteString(fmt.Sprintf("{%d, %v}", start.k, start.v))
-			str.WriteString(strings.Repeat("-", space))
+			str.WriteString(fmt.Sprintf("{%d, d: %d}", start.k, start.dist))
+			str.WriteString(strings.Repeat("-", int(space)))
 			str.WriteByte('>')
 			count++
 		}
@@ -206,23 +247,33 @@ func (sl *SkipList) ToString() string {
 }
 
 type sknodeStack struct {
-	s []*sknode
+	s []stackElm
+}
+
+type stackElm struct {
+	n   *sknode
+	pos uint64
 }
 
 func (ns *sknodeStack) reset() {
 	ns.s = ns.s[:0]
 }
 
-func (ns *sknodeStack) push(node *sknode) {
-	ns.s = append(ns.s, node)
+func (ns *sknodeStack) push(node *sknode, pos uint64) {
+	ns.s = append(ns.s, stackElm{node, pos})
 }
 
-func (ns *sknodeStack) pop() *sknode {
+func (ns *sknodeStack) peek() (*sknode, uint64) {
+	elm := ns.s[len(ns.s)-1]
+	return elm.n, elm.pos
+}
+
+func (ns *sknodeStack) pop() (*sknode, uint64) {
 	l := len(ns.s)
 	if l == 0 {
-		return nil
+		return nil, 0
 	}
-	node := ns.s[l-1]
+	elm := ns.s[l-1]
 	ns.s = ns.s[:l-1]
-	return node
+	return elm.n, elm.pos
 }
