@@ -59,7 +59,7 @@ func (sl *SkipList) Insert(key int, v interface{}) {
 	k := int64(key)
 	sl.lpath.reset()
 	nnode := &sknode{k: k, v: v, next: nil, nextl: nil}
-	node := sl.findNode(k, sl.getFastestLineNode())
+	node := sl.findNode(k)
 	// insert to base line
 	if node.k == k {
 		// update
@@ -73,7 +73,7 @@ func (sl *SkipList) Insert(key int, v interface{}) {
 
 func (sl *SkipList) Find(key int) (bool, interface{}) {
 	k := int64(key)
-	node := sl.findNode(k, sl.getFastestLineNode())
+	node := sl.findNode(k)
 	if node.k == k {
 		return true, node.v
 	}
@@ -83,7 +83,7 @@ func (sl *SkipList) Find(key int) (bool, interface{}) {
 func (sl *SkipList) Delete(key int) {
 	k := int64(key)
 	sl.lpath.reset()
-	node := sl.findNode(k, sl.getFastestLineNode())
+	node := sl.findNode(k)
 	if node.k != k {
 		return // not found
 	}
@@ -105,23 +105,26 @@ func (sl *SkipList) Delete(key int) {
 	node.reset()
 }
 
-func (sl *SkipList) findNode(k int64, start *sknode) *sknode {
-	// find where to change lines
-	for ; start.next != nil && start.next.k <= k; start = start.next {
+func (sl *SkipList) findNode(k int64) *sknode {
+	for l := len(sl.lines) - 1; l >= 0; l-- {
+		// find where to change lines
+		start := sl.lines[l]
+		for ; start.next != nil && start.next.k <= k; start = start.next {
+		}
+		if start.nextl == nil {
+			// base line
+			return start
+		}
+		sl.lpath.push(start)
 	}
-	if start.nextl == nil {
-		// base line
-		return start
-	}
-	sl.lpath.push(start)
-	return sl.findNode(k, start.nextl)
+	return nil
 }
 
 func (sl *SkipList) promote(basenode *sknode) {
 	node := basenode
 	for {
 		// TODO use separate generator
-		if rand.Float64() > sl.p {
+		if rand.Float64() < sl.p {
 			node = &sknode{k: basenode.k, v: nil, next: nil, nextl: node}
 			prevLn := sl.lpath.pop()
 			if prevLn == nil {
@@ -167,13 +170,6 @@ func (sl *SkipList) newStartNode() *sknode {
 	return &sknode{
 		k: -math.MaxInt64, v: nil,
 		next: nil, nextl: sl.lines[len(sl.lines)-1]}
-}
-
-func (sl *SkipList) getFastestLineNode() *sknode {
-	if len(sl.lines) == 0 {
-		return sl.lines[0]
-	}
-	return sl.lines[len(sl.lines)-1]
 }
 
 // TODO add debug version
