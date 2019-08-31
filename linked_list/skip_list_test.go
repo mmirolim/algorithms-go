@@ -6,7 +6,7 @@ import (
 )
 
 func TestSkipListInsert(t *testing.T) {
-	sl := NewSkipList()
+	sl := NewSkipList(100)
 	nodesnum := 10
 	for _, v := range rand.Perm(nodesnum) {
 		sl.Insert(v, v)
@@ -35,7 +35,7 @@ func TestSkipListInsert(t *testing.T) {
 }
 
 func TestSkipListGetByIndex(t *testing.T) {
-	sl := NewSkipList()
+	sl := NewSkipList(100)
 	nodesnum := 10
 	for _, v := range rand.Perm(nodesnum) {
 		sl.Insert(v, v)
@@ -54,7 +54,7 @@ func TestSkipListGetByIndex(t *testing.T) {
 }
 
 func TestSkipListFind(t *testing.T) {
-	sl := NewSkipList()
+	sl := NewSkipList(100)
 	nodesnum := 15
 	for _, v := range rand.Perm(nodesnum) {
 		sl.Insert(v, v)
@@ -80,7 +80,7 @@ func TestSkipListFind(t *testing.T) {
 }
 
 func TestSkipListDelete(t *testing.T) {
-	sl := NewSkipList()
+	sl := NewSkipList(100)
 	nodesnum := 15
 	for _, v := range rand.Perm(nodesnum) {
 		sl.Insert(v, v)
@@ -96,7 +96,7 @@ func TestSkipListDelete(t *testing.T) {
 }
 
 func BenchmarkInsertInOrderSkipListInsert(b *testing.B) {
-	sk := NewSkipList()
+	sk := NewSkipList(100)
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
 		sk.Insert(i, i)

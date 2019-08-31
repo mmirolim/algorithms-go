@@ -8,11 +8,13 @@ import (
 
 const promoteChance = 0.5
 
+// SkipList container
 type SkipList struct {
 	size  uint64
 	lines []*sknode
 	p     float64
 	lpath *sknodeStack
+	rng   *rand.Rand
 }
 
 type sknode struct {
@@ -31,11 +33,13 @@ func (n *sknode) reset() {
 }
 
 // NewSkipList create new skip list
-// TODO seed rand and separate generator
-func NewSkipList() *SkipList {
+// seed for random generator
+func NewSkipList(seed int64) *SkipList {
 	lines := make([]*sknode, 1, 10)
 	lines[0] = &sknode{}
-	return &SkipList{0, lines, promoteChance, &sknodeStack{}}
+	return &SkipList{
+		0, lines, promoteChance,
+		&sknodeStack{}, rand.New(rand.NewSource(seed))}
 }
 
 func (sl *SkipList) count(node *sknode) uint64 {
@@ -46,6 +50,7 @@ func (sl *SkipList) count(node *sknode) uint64 {
 	return count
 }
 
+// Count returns size of skiplist
 func (sl *SkipList) Count() uint64 {
 	return sl.size
 }
@@ -57,7 +62,7 @@ func (sl *SkipList) Insert(key int, v interface{}) {
 	nnode := &sknode{k: k, v: v, next: nil, nextl: nil}
 	node, pos := sl.findNode(k)
 	// insert to base line
-	if node.v != nil && node.k == k { // skip head
+	if node != sl.lines[0] && node.k == k { // skip head
 		// update
 		node.v = v
 		return
@@ -66,22 +71,20 @@ func (sl *SkipList) Insert(key int, v interface{}) {
 	nnode.dist = 1
 	connectNodes(&node, &nnode)
 	sl.promote(nnode, pos+1)
-	updateDist(nnode) // promote then update
-}
-
-// TODO remove dist logic from promote, use just updateDist
-func updateDist(node *sknode) {
-	for ; node.prevl != nil; node = node.prevl {
+	// skip column, dist already set by promote()
+	for ; nnode.prevl != nil; nnode = nnode.prevl {
 	}
-	for node = node.next; node != nil; node = node.next {
-		for clmnode := node.prevl; clmnode != nil; clmnode = clmnode.prevl {
+	// update distance for all right top nnodes
+	for nnode = nnode.next; nnode != nil; nnode = nnode.next {
+		for clmnode := nnode.prevl; clmnode != nil; clmnode = clmnode.prevl {
 			clmnode.dist++
-			node = clmnode
+			nnode = clmnode
 		}
 
 	}
 }
 
+// Find returns true and nodes's value by key or false and nil
 func (sl *SkipList) Find(key int) (bool, interface{}) {
 	k := int64(key)
 	node, _ := sl.findNode(k)
@@ -91,10 +94,11 @@ func (sl *SkipList) Find(key int) (bool, interface{}) {
 	return false, nil
 }
 
+// Delete node by key
 func (sl *SkipList) Delete(key int) {
 	k := int64(key)
 	sl.lpath.reset()
-	node, _ := sl.findNode(k) // TODO update pos
+	node, _ := sl.findNode(k)
 	if node.k != k {
 		return // not found
 	}
@@ -157,8 +161,7 @@ func (sl *SkipList) GetByIndex(pos uint64) (bool, interface{}) {
 func (sl *SkipList) promote(basenode *sknode, pos uint64) {
 	node := basenode
 	for {
-		// TODO use separate generator
-		if rand.Float64() < sl.p {
+		if sl.rng.Float64() < sl.p {
 			nnode := &sknode{}
 			nnode.k = basenode.k
 			nnode.nextl = node
@@ -221,7 +224,7 @@ func (sl *SkipList) newStartNode() *sknode {
 		next: nil, nextl: sl.lines[len(sl.lines)-1]}
 }
 
-// TODO add debug version
+// ToString returns skiplist serialized to string
 func (sl *SkipList) ToString() string {
 	var str strings.Builder
 	basecount := sl.size
@@ -230,8 +233,8 @@ func (sl *SkipList) ToString() string {
 
 	for i := 0; i < len(sl.lines); i++ {
 		start = sl.lines[i]
-		var count uint64 = sl.count(start)
-		var space uint64 = basecount * basespace / count
+		count := sl.count(start)
+		space := basecount * basespace / count
 		str.WriteString("head>")
 		str.WriteString(">")
 		for ; start != nil; start = start.next {
