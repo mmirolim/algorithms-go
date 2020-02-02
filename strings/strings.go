@@ -44,12 +44,13 @@ func CheckParenthesesBalanced03(str string) int {
 			return i
 		}
 	}
-
+	// TODO check count it maybe all '(', also unbalanced
 	return -1
 }
 
 func CheckParenthesesBalanced02(str string) int {
 	st := newCharStack()
+	// TODO redundant
 	if str[0] == ')' {
 		return 0
 	}
@@ -74,6 +75,7 @@ func CheckParenthesesBalanced02(str string) int {
 	return -1
 }
 
+// TODO add comments for different versions
 func CheckParenthesesBalanced01(str string) int {
 	st := newCharStack()
 	if str[0] == ')' {
@@ -98,6 +100,7 @@ func CheckParenthesesBalanced01(str string) int {
 }
 
 // problem ADM 3.24
+// TODO improve namings and add descriptions
 func SearchStrCharsInJournal(s1, s2 string) bool {
 	if len(s1) > len(s2) {
 		return false
@@ -640,7 +643,7 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 	findWord := func(w []byte, index [27][][]int8, grid [][]byte) []int {
 		type checkFn func(w []byte, r, c int, g [][]byte) bool
 		var res []int
-		// load index for word's frist char
+		// load index for word's first char
 		data := index[w[0]-baseNum]
 		for i := range data {
 			r, c := data[i][0], data[i][1]
@@ -655,7 +658,7 @@ func WhereIsWaldorfFindString(grid []string, strs []string) []int {
 					res = append(res, int(r+1))
 					res = append(res, int(c+1))
 					// we need topmost, leftmost value
-					// it will be the frist match
+					// it will be the first match
 					break
 				}
 			}

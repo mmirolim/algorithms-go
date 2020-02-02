@@ -136,6 +136,7 @@ func SubSeq(pat, s string) bool {
 	return true
 }
 
+// TODO add comments why and why not
 // first my BF brute force approach
 func LongestSubSeqBF(s1, s2 string) string {
 	check := func(ch byte, s string) int {
@@ -155,6 +156,7 @@ func LongestSubSeqBF(s1, s2 string) string {
 			if len(sub) == 0 {
 				return
 			}
+			// TODO check error of generating all sub seq
 			seq := append([]byte(sub[:id]), sub[id+1:]...)
 			out[string(seq)] = true
 			for i := 0; i < len(seq); i++ {
